@@ -200,6 +200,8 @@
 }
 /* FINDER */
 .finder-wrapper { 
+  position: relative;
+  z-index: 50;
   max-width: 800px; 
   margin: 50px auto 0; 
   display: flex; 
@@ -246,3 +248,4 @@
   .finder { grid-template-columns: 1fr; }
   .finder-btn { margin-top: 0; padding: 14px; }
 }
+

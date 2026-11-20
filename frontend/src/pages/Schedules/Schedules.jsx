@@ -1,83 +1,80 @@
-﻿import { useState } from 'react';
+﻿import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { useLanguage } from '../../context/LanguageContext.jsx';
 import Chip from '../../components/ui/Chip/Chip.jsx';
-import BookingModal from '../../components/booking/BookingModal.jsx';
+import { API_URL } from '../../utils/constants.js';
 import './Schedules.css';
-
-const schedules = [
-  { id: 'HZ-101', from: 'Hossana', to: 'Addis Ababa', dep: '06:00', arr: '10:30', price: 450, status: 'Boarding' },
-  { id: 'HZ-102', from: 'Hossana', to: 'Addis Ababa', dep: '09:00', arr: '13:30', price: 450, status: 'Available' },
-  { id: 'HZ-201', from: 'Hossana', to: 'Hawassa', dep: '07:30', arr: '10:45', price: 300, status: 'Full' },
-  { id: 'HZ-202', from: 'Hossana', to: 'Hawassa', dep: '13:00', arr: '16:15', price: 300, status: 'Available' },
-  { id: 'HZ-301', from: 'Hossana', to: 'Wolkite', dep: '08:00', arr: '10:45', price: 250, status: 'Boarding' },
-];
 
 const filters = ['All routes', 'Addis Ababa', 'Hawassa', 'Wolkite'];
 
 export default function Schedules() {
+  const { t, lang } = useLanguage();
   const [filter, setFilter] = useState('All routes');
-  const [active, setActive] = useState(null);
+  const [schedules, setSchedules] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const rows =
-    filter === 'All routes'
-      ? schedules
-      : schedules.filter((s) => s.to === filter);
+  useEffect(() => {
+    fetch(`${API_URL}/schedules`)
+      .then(res => res.json())
+      .then(data => setSchedules(Array.isArray(data) ? data : []))
+      .catch(err => console.error("Failed to load schedules", err))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const rows = filter === 'All routes' ? schedules : schedules.filter((s) => s.to === filter);
 
   return (
     <>
       <div className="banner">
         <div className="wrap">
-          <h1>Bus Schedules</h1>
-          <p>Live departures from Hossana Bus Station. Fares are per passenger, one way.</p>
+          <h1>{t('schedules')}</h1>
+          <p>{lang === 'am' ? 'ከሆሳና አውቶቡስ ጣቢያ የቀጥታ መነሻዎች።' : 'Live departures from Hossana Bus Station.'}</p>
         </div>
       </div>
 
       <section className="s wrap">
         <div className="chips">
           {filters.map((f) => (
-            <Chip key={f} active={filter === f} onClick={() => setFilter(f)}>
-              {f}
-            </Chip>
+            <Chip key={f} active={filter === f} onClick={() => setFilter(f)}>{f}</Chip>
           ))}
         </div>
 
-        <div className="tw">
-          <table>
-            <thead>
-              <tr>
-                <th>Bus</th><th>Route</th><th>Departure</th><th>Arrival</th>
-                <th>Fare</th><th>Status</th><th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((r) => (
-                <tr key={r.id}>
-                  <td><b>{r.id}</b></td>
-                  <td>{r.from} → {r.to}</td>
-                  <td>{r.dep}</td>
-                  <td>{r.arr}</td>
-                  <td className="price">ETB {r.price}</td>
-                  <td><span className={`st ${r.status}`}>{r.status}</span></td>
-                  <td>
-                    <button
-                      className="btn btn-primary"
-                      onClick={() => setActive(r)}
-                      disabled={r.status === 'Full'}
-                    >
-                      Book
-                    </button>
-                  </td>
+        {loading ? <p className="muted">Loading...</p> : rows.length === 0 ? <p className="muted">{t('noData')}</p> : (
+          <div className="tw">
+            <table>
+              <thead>
+                <tr>
+                  <th>{t('colBus')}</th><th>{t('colRoute')}</th><th>{t('colDep')}</th><th>{t('colArr')}</th>
+                  <th>{t('colFare')}</th><th>{t('colStatus')}</th><th>{t('colAction')}</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {rows.map((r) => (
+                  <tr key={r._id}>
+                    <td><b>{r.busId || r._id}</b></td>
+                    <td>
+                      {lang === 'am' && r.from_am ? r.from_am : (r.from || 'Hossana')} 
+                      → 
+                      {lang === 'am' && r.to_am ? r.to_am : r.to}
+                    </td>
+                    <td>{r.departure}</td>
+                    <td>{r.arrival}</td>
+                    <td className="price">ETB {r.price}</td>
+                    <td><span className={`st ${r.status || 'Available'}`}>{r.status || 'Available'}</span></td>
+                    <td>
+                      {r.status === 'Full' ? (
+                        <button className="btn btn-primary" disabled>Full</button>
+                      ) : (
+                        <Link to={`/booking?scheduleId=${r._id}`} className="btn btn-primary">{t('bookBtn')}</Link>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </section>
-
-      <BookingModal
-        schedule={active}
-        open={!!active}
-        onClose={() => setActive(null)}
-      />
     </>
   );
 }

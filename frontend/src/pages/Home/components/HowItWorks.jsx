@@ -1,19 +1,24 @@
-﻿import './HowItWorks.css';
-
-const steps = [
-  { n: 1, title: 'Choose your route', body: 'Pick from and to, then select a date.' },
-  { n: 2, title: 'Select a schedule', body: 'Compare departure times and fares.' },
-  { n: 3, title: 'Confirm your seat', body: 'Get a ticket code instantly.' },
-];
+﻿import { useNavigate } from 'react-router-dom';
+import { useLanguage } from '../../../context/LanguageContext.jsx';
+import './HowItWorks.css';
 
 export default function HowItWorks() {
+  const navigate = useNavigate();
+  const { t } = useLanguage();
+
+  const steps = [
+    { n: 1, title: t('howStep1Title'), body: t('howStep1Body') },
+    { n: 2, title: t('howStep2Title'), body: t('howStep2Body') },
+    { n: 3, title: t('howStep3Title'), body: t('howStep3Body') },
+  ];
+
   return (
     <section className="s how">
       <div className="wrap">
         <div className="sh">
           <div>
-            <div className="eyebrow">How it works</div>
-            <h2>Reserve in three steps</h2>
+            <div className="eyebrow">{t('howEyebrow')}</div>
+            <h2>{t('howTitle')}</h2>
           </div>
         </div>
 
@@ -25,6 +30,12 @@ export default function HowItWorks() {
               <p className="muted">{s.body}</p>
             </div>
           ))}
+        </div>
+
+        <div style={{ textAlign: 'center', marginTop: 40 }}>
+          <button className="btn btn-primary" style={{ padding: '14px 32px', fontSize: 16 }} onClick={() => navigate('/booking')}>
+            {t('bookBtn')} →
+          </button>
         </div>
       </div>
     </section>

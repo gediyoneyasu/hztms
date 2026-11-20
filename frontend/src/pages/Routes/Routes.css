@@ -2,11 +2,21 @@
   padding: 24px;
   display: flex;
   flex-direction: column;
+  gap: 12px;
 }
 
 .route-card h3 {
   margin: 8px 0;
-  font-size: 20px;
+  font-size: 22px;
+  color: var(--primary);
+}
+
+.route-card .meta {
+  display: flex;
+  gap: 14px;
+  font-size: 14px;
+  color: var(--mfg);
+  flex-wrap: wrap;
 }
 
 .route-foot {
@@ -15,4 +25,11 @@
   align-items: center;
   margin-top: auto;
   padding-top: 16px;
+  border-top: 1px dashed var(--border);
+}
+
+.route-foot .price {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--accent);
 }

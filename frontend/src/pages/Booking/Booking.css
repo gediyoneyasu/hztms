@@ -1,0 +1,163 @@
+﻿.booking-page { display: contents; }
+
+/* Step progress */
+.steps {
+  display: flex;
+  gap: 8px;
+  list-style: none;
+  padding: 0;
+  margin: 0 0 28px;
+  flex-wrap: wrap;
+}
+.steps li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 50px;
+  font-size: 13px;
+  color: var(--mfg);
+}
+.steps li span {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background: var(--muted);
+  display: grid; place-items: center;
+  font-size: 12px; font-weight: 700;
+  color: var(--mfg);
+}
+.steps li.on { border-color: var(--accent); background: #fff8f0; color: var(--primary); }
+.steps li.on span { background: var(--accent); color: #fff; }
+.steps li.done { color: var(--secondary); }
+.steps li.done span { background: var(--secondary); color: #fff; }
+
+.section-title { font-size: 22px; color: var(--primary); margin-bottom: 6px; }
+
+/* Forms */
+.booking-form {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.booking-form h2 { font-size: 22px; color: var(--primary); margin-bottom: 8px; }
+.field-wrap { display: flex; flex-direction: column; gap: 6px; }
+.field-label { font-size: 13px; font-weight: 600; color: var(--primary); }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 700px) { .grid-2 { grid-template-columns: 1fr; } }
+
+.booking-submit { padding: 14px; font-size: 16px; font-weight: 700; }
+
+.booking-error {
+  background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c;
+  padding: 12px 14px; border-radius: 10px; font-size: 14px; margin-bottom: 12px;
+}
+
+/* Bus list */
+.bus-list { display: flex; flex-direction: column; gap: 12px; }
+.bus-card {
+  display: flex; justify-content: space-between; align-items: center; gap: 16px;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 14px; padding: 18px 20px; transition: 0.2s;
+}
+.bus-card:hover { border-color: var(--secondary); box-shadow: 0 6px 18px rgba(20,40,80,0.08); }
+.bus-info { flex: 1; }
+.bus-name { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.bus-name b { font-size: 17px; }
+.chip { background: var(--muted); color: var(--mfg); padding: 3px 10px; border-radius: 50px; font-size: 11px; font-weight: 600; }
+.bus-route { display: flex; gap: 12px; align-items: center; font-size: 14px; color: var(--fg); margin-bottom: 4px; }
+.bus-meta { font-size: 12px; color: var(--mfg); }
+.bus-price { text-align: right; }
+.bus-price .price { font-size: 22px; font-weight: 800; color: var(--accent); margin-bottom: 8px; }
+
+@media (max-width: 600px) {
+  .bus-card { flex-direction: column; align-items: stretch; }
+  .bus-price { text-align: left; }
+}
+
+/* Seats */
+.seat-layout {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 14px; padding: 20px; margin: 16px 0;
+}
+.driver {
+  text-align: right; font-size: 13px; color: var(--mfg);
+  padding-bottom: 12px; border-bottom: 1px dashed var(--border); margin-bottom: 16px;
+}
+.seat-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; max-width: 320px; margin: 0 auto;
+}
+.seat {
+  aspect-ratio: 1; border-radius: 8px; border: 1px solid var(--border);
+  background: var(--muted); cursor: pointer; font-size: 12px; font-weight: 600;
+  color: var(--fg); transition: 0.15s; display: grid; place-items: center;
+}
+.seat:hover:not(.taken) { border-color: var(--secondary); background: #fff; }
+.seat.picked { background: var(--accent); color: #fff; border-color: var(--accent); }
+.seat.taken { background: #e5e7eb; color: #9ca3af; cursor: not-allowed; text-decoration: line-through; }
+
+.legend { display: flex; gap: 20px; font-size: 13px; color: var(--mfg); margin: 12px 0; flex-wrap: wrap; }
+.legend i.seat { display: inline-block; width: 18px; height: 18px; vertical-align: middle; margin-right: 6px; font-style: normal; }
+.legend i.seat.picked { background: var(--accent); border-color: var(--accent); }
+.legend i.seat.taken { background: #e5e7eb; }
+
+/* Summary */
+.booking-summary {
+  background: var(--muted); border-radius: 12px; padding: 16px;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.booking-summary .row { display: flex; justify-content: space-between; font-size: 14px; color: var(--mfg); }
+.booking-summary .row b { color: var(--fg); }
+.booking-summary .row.total { border-top: 1px solid var(--border); padding-top: 10px; font-size: 16px; color: var(--primary); }
+.booking-summary .row.total b { font-size: 20px; color: var(--accent); }
+
+/* Step actions */
+.step-actions { display: flex; gap: 10px; margin-top: 20px; justify-content: space-between; }
+.step-actions .btn { padding: 12px 22px; }
+
+/* Payment options */
+.pay-options { display: flex; flex-direction: column; gap: 10px; }
+.pay-option {
+  display: flex; align-items: center; gap: 10px;
+  padding: 14px 16px; border: 1px solid var(--border); border-radius: 10px;
+  cursor: pointer; transition: 0.15s; font-size: 15px;
+}
+.pay-option:hover { border-color: var(--secondary); }
+.pay-option.on { border-color: var(--accent); background: #fff8f0; }
+.pay-option input { accent-color: var(--accent); }
+
+/* E-ticket */
+.ticket-wrap { gap: 12px; }
+.confirm-badge {
+  background: #dcfce7; color: #15803d; padding: 8px 14px; border-radius: 50px;
+  font-weight: 700; font-size: 14px; width: fit-content;
+}
+.eticket {
+  display: grid; grid-template-columns: 1fr auto; gap: 24px;
+  background: var(--muted); border-radius: 16px; padding: 24px; margin-top: 12px;
+}
+.eticket-left { display: flex; flex-direction: column; gap: 8px; }
+.eticket-ref {
+  font-family: 'Plus Jakarta Sans', monospace; font-size: 22px; font-weight: 800;
+  color: var(--accent); margin-bottom: 8px; padding-bottom: 12px;
+  border-bottom: 1px dashed var(--border);
+}
+.eticket-row { display: flex; justify-content: space-between; font-size: 14px; color: var(--mfg); }
+.eticket-row b { color: var(--fg); }
+.eticket-row.total { border-top: 1px solid var(--border); padding-top: 10px; font-size: 16px; color: var(--primary); }
+.eticket-row.total b { font-size: 20px; color: var(--accent); }
+.eticket-right { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.eticket-right small { font-size: 11px; color: var(--mfg); }
+
+@media (max-width: 700px) {
+  .eticket { grid-template-columns: 1fr; }
+  .eticket-right { align-items: center; }
+}
+
+/* Print */
+@media print {
+  .banner, .steps, .step-actions { display: none !important; }
+  .eticket { border: 1px solid #000; }
+}

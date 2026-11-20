@@ -1,19 +1,22 @@
-﻿import './Services.css';
-
-const services = [
-  { icon: '🎫', title: 'Seat Reservation', body: 'Book online or at the station counter.' },
-  { icon: '🔍', title: 'Lost & Found', body: 'Report lost items and check found property.' },
-  { icon: '📝', title: 'Complaints', body: 'File a complaint and track its resolution.' },
-  { icon: '🚶', title: 'Walk-in Booking', body: 'Same-day tickets subject to availability.' },
-];
+﻿import { useLanguage } from '../../context/LanguageContext.jsx';
+import './Services.css';
 
 export default function Services() {
+  const { t } = useLanguage();
+
+  const services = [
+    { icon: '🎫', title: t('svcSeatTitle'), body: t('svcSeatBody') },
+    { icon: '🔍', title: t('svcLostTitle'), body: t('svcLostBody') },
+    { icon: '📝', title: t('svcCompTitle'), body: t('svcCompBody') },
+    { icon: '🚶', title: t('svcWalkTitle'), body: t('svcWalkBody') },
+  ];
+
   return (
     <>
       <div className="banner">
         <div className="wrap">
-          <h1>Our Services</h1>
-          <p>Everything you need for a smooth journey.</p>
+          <h1>{t('svcTitle')}</h1>
+          <p>{t('svcSub')}</p>
         </div>
       </div>
 

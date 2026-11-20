@@ -1,9 +1,12 @@
-﻿.st {
+﻿/* Status Badges */
+.st {
   font-size: 12px;
   font-weight: 700;
   padding: 6px 12px;
   border-radius: 50px;
   background: var(--muted);
+  display: inline-block;
+  text-align: center;
 }
 
 .st.Boarding {
@@ -16,17 +19,29 @@
   color: #991b1b;
 }
 
+.st.Available, .st.Confirmed {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.st.Pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+/* Table Container */
 .tw {
   background: #fff;
   border-radius: 16px;
   border: 1px solid var(--border);
-  overflow: hidden;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+  overflow-x: auto; /* Makes it scroll on mobile */
+  box-shadow: 0 10px 30px rgba(0,0,0,0.03);
 }
 
 table {
   width: 100%;
   border-collapse: collapse;
+  min-width: 700px; /* Prevents squishing on phones */
 }
 
 th {
@@ -37,10 +52,35 @@ th {
   text-transform: uppercase;
   color: var(--mfg);
   font-weight: 700;
+  letter-spacing: 0.05em;
+  border-bottom: 2px solid var(--border);
 }
 
 td {
   padding: 16px;
   border-bottom: 1px solid var(--border);
   font-size: 14px;
+  color: var(--fg);
+  vertical-align: middle;
+}
+
+/* Zebra Striping and Hover Effect */
+tbody tr:nth-child(even) {
+  background-color: #fcfcfc;
+}
+
+tbody tr:hover {
+  background-color: #f1f5f9;
+  transition: background-color 0.2s ease;
+}
+
+tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Fare Price styling */
+td.price {
+  font-weight: 700;
+  color: var(--accent);
+  font-size: 15px;
 }
