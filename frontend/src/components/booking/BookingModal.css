@@ -1,0 +1,25 @@
+﻿.ticket-box {
+  border: 2px dashed var(--border);
+  border-radius: 12px;
+  padding: 18px;
+  text-align: center;
+  margin-top: 14px;
+}
+
+.ticket-code {
+  font-family: monospace;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--primary);
+}
+
+.booking-full {
+  margin-top: 16px;
+  width: 100%;
+  justify-content: center;
+}
+
+.booking-full + .booking-full {
+  margin-top: 8px;
+}

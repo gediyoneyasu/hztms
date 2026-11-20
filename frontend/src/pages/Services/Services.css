@@ -1,0 +1,23 @@
+﻿.svc-card {
+  padding: 32px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.svc-icon {
+  font-size: 36px;
+  margin-bottom: 16px;
+  background: #f8fafc;
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+}
+
+.svc-card h3 {
+  font-size: 20px;
+  margin: 10px 0;
+}

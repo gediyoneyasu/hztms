@@ -1,0 +1,13 @@
+﻿:root {
+  --bg: oklch(0.985 0.005 240);
+  --fg: oklch(0.25 0.06 245);
+  --card: #fff;
+  --primary: oklch(0.31 0.07 245);
+  --pfg: #fff;
+  --secondary: oklch(0.56 0.12 240);
+  --muted: oklch(0.955 0.01 240);
+  --mfg: oklch(0.5 0.03 245);
+  --accent: oklch(0.78 0.12 62);
+  --border: oklch(0.91 0.015 240);
+  --radius: 14px;
+}

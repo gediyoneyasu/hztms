@@ -1,0 +1,18 @@
+﻿.route-card {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+}
+
+.route-card h3 {
+  margin: 8px 0;
+  font-size: 20px;
+}
+
+.route-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: auto;
+  padding-top: 16px;
+}

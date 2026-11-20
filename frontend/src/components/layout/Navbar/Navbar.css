@@ -1,0 +1,77 @@
+﻿.main-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center; 
+  flex: 1; 
+  gap: 4px;
+}
+
+.main-nav a,
+.main-nav .dd > button {
+  padding: 8px 16px;
+  border-radius: 8px;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  font-weight: 600;
+  white-space: nowrap;
+  font-size: 14px;
+  font-family: inherit;
+  color: #cbd5e1;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.main-nav a:hover,
+.main-nav a.on,
+.main-nav .dd > button:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+.dd {
+  position: relative;
+}
+
+.menu {
+  display: none;
+  position: absolute;
+  top: 140%;
+  left: 50%;
+  transform: translateX(-50%);
+  min-width: 220px;
+  background: #ffffff;
+  color: var(--fg);
+  border-radius: 12px;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+  padding: 8px;
+  z-index: 1000;
+  border: 1px solid var(--border);
+}
+
+.dd.open .menu {
+  display: block;
+}
+
+.menu a {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 14px;
+  color: var(--fg);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.menu a:hover {
+  background: var(--muted);
+  color: var(--primary);
+}
+
+@media (max-width: 1000px) {
+  .main-nav { display: none; }
+}

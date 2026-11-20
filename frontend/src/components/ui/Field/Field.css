@@ -1,0 +1,25 @@
+﻿.field-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.field-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.field {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px;
+  background: var(--bg);
+  outline: none;
+}
+
+.field:focus {
+  border-color: var(--secondary);
+  box-shadow: 0 0 0 3px rgb(80 120 200 / 0.12);
+}

@@ -1,0 +1,32 @@
+﻿.search-bar {
+  display: flex;
+  align-items: center;
+  background: rgb(255 255 255 / 0.1);
+  border-radius: 999px;
+  padding: 2px 4px 2px 14px;
+}
+
+.search-bar input {
+  background: none;
+  border: 0;
+  outline: 0;
+  color: inherit;
+  width: 140px;
+}
+
+.search-bar input::placeholder {
+  color: rgb(255 255 255 / 0.6);
+}
+
+.search-bar button {
+  background: none;
+  border: 0;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  color: inherit;
+}
+
+.search-bar button:hover {
+  background: rgb(255 255 255 / 0.1);
+}

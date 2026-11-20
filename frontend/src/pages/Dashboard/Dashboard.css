@@ -1,0 +1,6 @@
+﻿.dash-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; border-bottom: 1px solid var(--border); padding-bottom: 20px; }
+.dash-header h1 { font-size: 32px; }
+.dash-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 24px; }
+.dash-card { padding: 30px; }
+.dash-card h3 { font-size: 20px; margin-bottom: 8px; }
+.dash-card .btn { width: 100%; justify-content: center; }

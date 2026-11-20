@@ -1,0 +1,17 @@
+﻿.ann-card {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+}
+
+.ann-card h3 {
+  font-size: 20px;
+  margin: 12px 0 8px;
+}
+
+.ann-card p {
+  line-height: 1.6;
+  color: var(--mfg);
+  flex: 1;
+  white-space: pre-wrap;
+}

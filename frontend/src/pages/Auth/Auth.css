@@ -1,0 +1,8 @@
+﻿.auth-wrap { display: flex; justify-content: center; padding-top: 60px; }
+.auth-card { padding: 40px; width: 100%; max-width: 450px; }
+.auth-form { display: flex; flex-direction: column; gap: 16px; margin-top: 20px; }
+.auth-form label { font-size: 13px; font-weight: 600; margin-bottom: 4px; display: block; }
+.auth-btn { width: 100%; justify-content: center; margin-top: 10px; padding: 12px; }
+.auth-error { background: #ffebee; color: #c62828; padding: 10px; border-radius: 6px; font-size: 14px; margin-top: 10px; }
+.auth-toggle { text-align: center; margin-top: 20px; font-size: 14px; color: var(--mfg); }
+.auth-toggle button { background: none; border: none; color: var(--primary); font-weight: 600; cursor: pointer; }

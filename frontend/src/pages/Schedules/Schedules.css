@@ -1,0 +1,46 @@
+﻿.st {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 12px;
+  border-radius: 50px;
+  background: var(--muted);
+}
+
+.st.Boarding {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.st.Full {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.tw {
+  background: #fff;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th {
+  background: #f8fafc;
+  padding: 16px;
+  text-align: left;
+  font-size: 12px;
+  text-transform: uppercase;
+  color: var(--mfg);
+  font-weight: 700;
+}
+
+td {
+  padding: 16px;
+  border-bottom: 1px solid var(--border);
+  font-size: 14px;
+}

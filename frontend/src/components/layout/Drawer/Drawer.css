@@ -1,0 +1,105 @@
+﻿.drawer {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: none;
+}
+
+.drawer.open {
+  display: block;
+}
+
+.drawer .ov {
+  position: absolute;
+  inset: 0;
+  background: rgb(0 0 0 / 0.5);
+}
+
+.drawer .pn {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: min(320px, 85vw);
+  background: var(--primary);
+  color: var(--pfg);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow-y: auto;
+}
+
+.drawer .pn > a {
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 15px;
+}
+
+.drawer .pn > a:hover {
+  background: rgb(255 255 255 / 0.1);
+}
+
+/* Mobile Services Dropdown */
+.drawer-dd {
+  display: flex;
+  flex-direction: column;
+}
+
+.drawer-dd > button {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: none;
+  border: 0;
+  color: inherit;
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 15px;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+}
+
+.drawer-dd > button:hover {
+  background: rgb(255 255 255 / 0.1);
+}
+
+.drawer-dd .chevron {
+  font-size: 12px;
+  transition: transform 0.25s ease;
+}
+
+.drawer-dd.open .chevron {
+  transform: rotate(180deg);
+}
+
+.drawer-menu {
+  display: none;
+  flex-direction: column;
+  padding-left: 16px;
+  gap: 4px;
+  margin-top: 4px;
+  border-left: 2px solid rgb(255 255 255 / 0.2);
+}
+
+.drawer-dd.open .drawer-menu {
+  display: flex; /* Pushes content down */
+}
+
+.drawer-menu a {
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+.drawer-menu a:hover {
+  background: rgb(255 255 255 / 0.1);
+  opacity: 1;
+}
+
+.drawer-book {
+  margin-top: 14px;
+  justify-content: center;
+}
