@@ -26,8 +26,8 @@ export default function Navbar() {
           {t('services')} ▾
         </button>
         <div className="menu">
-          <Link to="/services">{t('lostFound')}</Link>
-          <Link to="/services">{t('complain')}</Link>
+          <Link to="/lost-found">{t('lostFound')}</Link>
+          <Link to="/complaints">{t('complain')}</Link>
           <Link to="/schedules">{t('schedules')}</Link>
           <Link to="/routes">{t('routes')}</Link>
           <Link to="/services">{t('walkIn')}</Link>
@@ -39,3 +39,4 @@ export default function Navbar() {
     </nav>
   );
 }
+

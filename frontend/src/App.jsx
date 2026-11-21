@@ -16,6 +16,8 @@ import Admin from './pages/Admin/Admin.jsx';
 import AdminLogin from './pages/AdminLogin/AdminLogin.jsx';
 import Auth from './pages/Auth/Auth.jsx';
 import Dashboard from './pages/Dashboard/Dashboard.jsx';
+import Complaints from './pages/Complaints/Complaints.jsx';
+import LostFound from './pages/LostFound/LostFound.jsx';
 import './App.css';
 
 export default function App() {
@@ -40,6 +42,8 @@ export default function App() {
             <Route path="/booking" element={<Booking />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/services" element={<Services />} />
+            <Route path="/complaints" element={<Complaints />} />
+            <Route path="/lost-found" element={<LostFound />} />
           </Route>
         </Routes>
       </main>
@@ -48,3 +52,4 @@ export default function App() {
     </>
   );
 }
+

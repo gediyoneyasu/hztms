@@ -14,6 +14,10 @@ export default function Admin() {
   const [routes, setRoutes] = useState([]);
   const [announcements, setAnnouncements] = useState([]);
   const [messages, setMessages] = useState([]);
+  const [complaints, setComplaints] = useState([]);
+  const [lostItems, setLostItems] = useState([]);
+  const [foundItems, setFoundItems] = useState([]);
+  const [adminReply, setAdminReply] = useState({ id: '', text: '' });
 
   // Form States - Now including _am fields for bilingual support
   const [newRoute, setNewRoute] = useState({ from: 'Hossana', from_am: 'ሆሳና', to: '', to_am: '', price: '', duration: '', frequency: '', frequency_am: '' });
@@ -30,8 +34,12 @@ export default function Admin() {
       fetch(`${API_URL}/routes`).then(r => r.json()),
       fetch(`${API_URL}/announcements`).then(r => r.json()),
       fetch(`${API_URL}/messages`).then(r => r.json()),
-    ]).then(([b, s, r, a, m]) => {
+      fetch(`${API_URL}/complaints`).then(r => r.json()),
+      fetch(`${API_URL}/lost-found/lost`).then(r => r.json()),
+      fetch(`${API_URL}/lost-found/admin/found`).then(r => r.json()),
+    ]).then(([b, s, r, a, m, c, l, f]) => {
       setBookings(b); setSchedules(s); setRoutes(r); setAnnouncements(a); setMessages(m);
+      setComplaints(c); setLostItems(l); setFoundItems(f);
     }).catch(console.error);
   };
 
@@ -102,6 +110,9 @@ export default function Admin() {
         <button className={tab === 'schedules' ? 'active' : ''} onClick={() => setTab('schedules')}>🚌 {t('tabSchedules')}</button>
         <button className={tab === 'announcements' ? 'active' : ''} onClick={() => setTab('announcements')}>📢 {t('tabAnnouncements')}</button>
         <button className={tab === 'messages' ? 'active' : ''} onClick={() => setTab('messages')}>✉️ {t('tabMessages')}</button>
+        <button className={tab === 'complaints' ? 'active' : ''} onClick={() => setTab('complaints')}>📝 Complaints</button>
+        <button className={tab === 'lostItems' ? 'active' : ''} onClick={() => setTab('lostItems')}>🔍 Lost Items</button>
+        <button className={tab === 'foundItems' ? 'active' : ''} onClick={() => setTab('foundItems')}>📦 Found Items</button>
         <button className="logout-btn" onClick={logout}>🚪 {t('btnLogout')}</button>
       </aside>
 
@@ -366,10 +377,144 @@ export default function Admin() {
             </div>
           </div>
         )}
+              {/* COMPLAINTS TAB */}
+        {tab === 'complaints' && (
+          <div className="admin-section">
+            <h1>Manage Complaints</h1>
+            <div className="tw card" style={{ padding: 0 }}>
+              <table>
+                <thead><tr><th>ID</th><th>Ticket</th><th>Category</th><th>Status</th><th>Action</th></tr></thead>
+                <tbody>
+                  {complaints?.length === 0 ? <tr><td colSpan="5">No complaints found.</td></tr> : complaints?.map(c => (
+                    <tr key={c._id}>
+                      <td><b>{c.complaintId}</b><br/><small className="muted">{new Date(c.createdAt).toLocaleDateString()}</small></td>
+                      <td>{c.bookingId}<br/><small className="muted">{c.userEmail}</small></td>
+                      <td>{c.category}</td>
+                      <td><span className={`st ${c.status}`}>{c.status}</span></td>
+                      <td>
+                        <select 
+                          className="field" 
+                          style={{ padding: '6px', fontSize: '12px', width: '120px', marginBottom: '5px' }}
+                          value={c.status}
+                          onChange={(e) => {
+                            fetch(`${API_URL}/complaints/${c._id}`, {
+                              method: 'PUT',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ status: e.target.value })
+                            }).then(() => fetchAll());
+                          }}
+                        >
+                          <option value="Pending">Pending</option>
+                          <option value="Under Review">Under Review</option>
+                          <option value="In Progress">In Progress</option>
+                          <option value="Resolved">Resolved</option>
+                          <option value="Rejected">Rejected</option>
+                        </select>
+                        <br/>
+                        <button className="btn btn-outline" style={{ padding: '4px 8px', fontSize: '11px' }} onClick={() => {
+                          const reply = prompt("Enter admin response:", c.adminResponse);
+                          if (reply !== null) {
+                            fetch(`${API_URL}/complaints/${c._id}`, {
+                              method: 'PUT',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ adminResponse: reply })
+                            }).then(() => fetchAll());
+                          }
+                        }}>
+                          Reply
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* LOST ITEMS TAB */}
+        {tab === 'lostItems' && (
+          <div className="admin-section">
+            <h1>Lost Item Reports</h1>
+            <div className="tw card" style={{ padding: 0 }}>
+              <table>
+                <thead><tr><th>Item</th><th>Ticket</th><th>Status</th><th>Action</th></tr></thead>
+                <tbody>
+                  {lostItems?.length === 0 ? <tr><td colSpan="4">No lost items reported.</td></tr> : lostItems?.map(l => (
+                    <tr key={l._id}>
+                      <td><b>{l.itemName}</b><br/><small className="muted">{l.category}</small></td>
+                      <td>{l.bookingId}</td>
+                      <td><span className={`st ${l.status}`}>{l.status}</span></td>
+                      <td>
+                        <select 
+                          className="field" 
+                          style={{ padding: '6px', fontSize: '12px' }}
+                          value={l.status}
+                          onChange={(e) => {
+                            fetch(`${API_URL}/lost-found/admin/lost/${l._id}`, {
+                              method: 'PUT',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ status: e.target.value })
+                            }).then(() => fetchAll());
+                          }}
+                        >
+                          <option value="Reported">Reported</option>
+                          <option value="Under Review">Under Review</option>
+                          <option value="Found">Found</option>
+                          <option value="Returned">Returned</option>
+                          <option value="Rejected">Rejected</option>
+                        </select>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* FOUND ITEMS TAB */}
+        {tab === 'foundItems' && (
+          <div className="admin-section">
+            <h1>Found Item Reports</h1>
+            <div className="tw card" style={{ padding: 0 }}>
+              <table>
+                <thead><tr><th>Item</th><th>Location</th><th>Status</th><th>Action</th></tr></thead>
+                <tbody>
+                  {foundItems?.length === 0 ? <tr><td colSpan="4">No found items reported.</td></tr> : foundItems?.map(f => (
+                    <tr key={f._id}>
+                      <td><b>{f.itemName}</b><br/><small className="muted">{f.category}</small></td>
+                      <td>{f.foundLocation}</td>
+                      <td><span className={`st ${f.status}`}>{f.status}</span></td>
+                      <td>
+                        <button 
+                          className={`btn ${f.isPublished ? 'btn-outline' : 'btn-primary'}`} 
+                          style={{ padding: '6px 12px', fontSize: '12px' }}
+                          onClick={() => {
+                            fetch(`${API_URL}/lost-found/admin/found/${f._id}`, {
+                              method: 'PUT',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ isPublished: !f.isPublished })
+                            }).then(() => fetchAll());
+                          }}
+                        >
+                          {f.isPublished ? 'Unpublish' : 'Publish'}
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );
 }
+
+
+
 
 
 
