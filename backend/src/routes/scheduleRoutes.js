@@ -1,6 +1,7 @@
 ﻿const express = require('express');
 const router = express.Router();
 const { getSchedules, createSchedule, deleteSchedule, updateScheduleStatus } = require('../controllers/scheduleController');
-router.route('/').get(getSchedules).post(createSchedule);
-router.route('/:id').delete(deleteSchedule).put(updateScheduleStatus);
+const { admin, protect } = require('../middleware/authMiddleware');
+router.route('/').get(getSchedules).post(protect, admin, createSchedule);
+router.route('/:id').delete(protect, admin, deleteSchedule).put(protect, admin, updateScheduleStatus);
 module.exports = router;

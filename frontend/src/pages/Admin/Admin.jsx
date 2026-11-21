@@ -1,5 +1,6 @@
 ﻿import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext.jsx';
 import { useLanguage } from '../../context/LanguageContext.jsx';
 import { API_URL } from '../../utils/constants.js';
 import { uploadImage } from '../../services/uploadService.js';
@@ -7,6 +8,7 @@ import './Admin.css';
 
 export default function Admin() {
   const navigate = useNavigate();
+  const { user, logout: logoutUser } = useAuth();
   const { t } = useLanguage();
   const [tab, setTab] = useState('bookings');
   const [bookings, setBookings] = useState([]);
@@ -26,32 +28,58 @@ export default function Admin() {
   const [routeImage, setRouteImage] = useState(null);
   const [annImage, setAnnImage] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [loadError, setLoadError] = useState('');
 
-  const fetchAll = () => {
+  const adminFetch = async (path, options = {}) => {
+    const response = await fetch(`${API_URL}${path}`, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(options.headers || {}),
+        Authorization: `Bearer ${user?.token}`,
+      },
+    });
+    if (!response.ok) {
+      const body = await response.text();
+      let message = body;
+      try {
+        message = JSON.parse(body).message || body;
+      } catch {
+        // Keep the response text when the server does not return JSON.
+      }
+      const error = new Error(message || `Request failed with ${response.status}`);
+      setLoadError(error.message);
+      throw error;
+    }
+    return response;
+  };
+
+  const fetchAll = async () => {
+    setLoadError('');
     Promise.all([
-      fetch(`${API_URL}/bookings`).then(r => r.json()),
-      fetch(`${API_URL}/schedules`).then(r => r.json()),
-      fetch(`${API_URL}/routes`).then(r => r.json()),
-      fetch(`${API_URL}/announcements`).then(r => r.json()),
-      fetch(`${API_URL}/messages`).then(r => r.json()),
-      fetch(`${API_URL}/complaints`).then(r => r.json()),
-      fetch(`${API_URL}/lost-found/lost`).then(r => r.json()),
-      fetch(`${API_URL}/lost-found/admin/found`).then(r => r.json()),
-    ]).then(([b, s, r, a, m, c, l, f]) => {
+      '/bookings', '/schedules', '/routes', '/announcements', '/messages',
+      '/complaints', '/lost-found/lost', '/lost-found/admin/found',
+    ].map(async (path) => {
+      const response = await adminFetch(path);
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || `Unable to load ${path}`);
+      if (!Array.isArray(data)) throw new Error(`Unexpected response from ${path}`);
+      return data;
+    })).then(([b, s, r, a, m, c, l, f]) => {
       setBookings(b); setSchedules(s); setRoutes(r); setAnnouncements(a); setMessages(m);
       setComplaints(c); setLostItems(l); setFoundItems(f);
-    }).catch(console.error);
+    }).catch((err) => setLoadError(err.message));
   };
 
   useEffect(() => {
-    if (localStorage.getItem('isAdmin') !== 'true') { navigate('/admin-login'); return; }
+    if (!user || user.role !== 'Admin' || !user.token) { navigate('/admin-login', { replace: true }); return; }
     fetchAll();
-  }, [navigate]);
+  }, [navigate, user]);
 
-  const logout = () => { localStorage.removeItem('isAdmin'); navigate('/'); };
+  const logout = () => { logoutUser(); navigate('/'); };
 
   const approveBooking = async (id, status) => {
-    await fetch(`${API_URL}/bookings/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status }) });
+    await adminFetch(`/bookings/${id}`, { method: 'PUT', body: JSON.stringify({ status }) });
     fetchAll();
   };
 
@@ -60,7 +88,7 @@ export default function Admin() {
     setSaving(true);
     try {
       const image = routeImage ? await uploadImage(routeImage) : '';
-      await fetch(`${API_URL}/routes`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...newRoute, price: Number(newRoute.price), image }) });
+      await adminFetch('/routes', { method: 'POST', body: JSON.stringify({ ...newRoute, price: Number(newRoute.price), image }) });
       setNewRoute({ from: 'Hossana', from_am: 'ሆሳና', to: '', to_am: '', price: '', duration: '', frequency: '', frequency_am: '' });
       setRouteImage(null);
       e.target.reset();
@@ -72,22 +100,22 @@ export default function Admin() {
     }
   };
 
-  const deleteRoute = async (id) => { if (window.confirm('Delete route?')) { await fetch(`${API_URL}/routes/${id}`, { method: 'DELETE' }); fetchAll(); } };
+  const deleteRoute = async (id) => { if (window.confirm('Delete route?')) { await adminFetch(`/routes/${id}`, { method: 'DELETE' }); fetchAll(); } };
 
   const addSchedule = async (e) => {
     e.preventDefault();
-    await fetch(`${API_URL}/schedules`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...newSchedule, price: Number(newSchedule.price) }) });
+    await adminFetch('/schedules', { method: 'POST', body: JSON.stringify({ ...newSchedule, price: Number(newSchedule.price) }) });
     setNewSchedule({ busId: '', from: 'Hossana', from_am: 'ሆሳና', to: '', to_am: '', departure: '', arrival: '', price: '' }); fetchAll();
   };
 
-  const deleteSchedule = async (id) => { if (window.confirm('Delete schedule?')) { await fetch(`${API_URL}/schedules/${id}`, { method: 'DELETE' }); fetchAll(); } };
+  const deleteSchedule = async (id) => { if (window.confirm('Delete schedule?')) { await adminFetch(`/schedules/${id}`, { method: 'DELETE' }); fetchAll(); } };
 
   const addAnnouncement = async (e) => {
     e.preventDefault();
     setSaving(true);
     try {
       const image = annImage ? await uploadImage(annImage) : '';
-      await fetch(`${API_URL}/announcements`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...newAnn, image }) });
+      await adminFetch('/announcements', { method: 'POST', body: JSON.stringify({ ...newAnn, image }) });
       setNewAnn({ title_en: '', title_am: '', date: '', body_en: '', body_am: '' });
       setAnnImage(null);
       e.target.reset();
@@ -99,7 +127,7 @@ export default function Admin() {
     }
   };
 
-  const deleteAnnouncement = async (id) => { if (window.confirm('Delete announcement?')) { await fetch(`${API_URL}/announcements/${id}`, { method: 'DELETE' }); fetchAll(); } };
+  const deleteAnnouncement = async (id) => { if (window.confirm('Delete announcement?')) { await adminFetch(`/announcements/${id}`, { method: 'DELETE' }); fetchAll(); } };
 
   return (
     <div className="admin-layout">
@@ -117,6 +145,7 @@ export default function Admin() {
       </aside>
 
       <main className="admin-content">
+        {loadError && <div className="booking-error" role="alert">{loadError}</div>}
         {/* BOOKINGS TAB */}
         {tab === 'bookings' && (
           <div className="admin-section">
@@ -397,9 +426,8 @@ export default function Admin() {
                           style={{ padding: '6px', fontSize: '12px', width: '120px', marginBottom: '5px' }}
                           value={c.status}
                           onChange={(e) => {
-                            fetch(`${API_URL}/complaints/${c._id}`, {
+                            adminFetch(`/complaints/${c._id}`, {
                               method: 'PUT',
-                              headers: { 'Content-Type': 'application/json' },
                               body: JSON.stringify({ status: e.target.value })
                             }).then(() => fetchAll());
                           }}
@@ -414,9 +442,8 @@ export default function Admin() {
                         <button className="btn btn-outline" style={{ padding: '4px 8px', fontSize: '11px' }} onClick={() => {
                           const reply = prompt("Enter admin response:", c.adminResponse);
                           if (reply !== null) {
-                            fetch(`${API_URL}/complaints/${c._id}`, {
+                            adminFetch(`/complaints/${c._id}`, {
                               method: 'PUT',
-                              headers: { 'Content-Type': 'application/json' },
                               body: JSON.stringify({ adminResponse: reply })
                             }).then(() => fetchAll());
                           }
@@ -451,9 +478,8 @@ export default function Admin() {
                           style={{ padding: '6px', fontSize: '12px' }}
                           value={l.status}
                           onChange={(e) => {
-                            fetch(`${API_URL}/lost-found/admin/lost/${l._id}`, {
+                            adminFetch(`/lost-found/admin/lost/${l._id}`, {
                               method: 'PUT',
-                              headers: { 'Content-Type': 'application/json' },
                               body: JSON.stringify({ status: e.target.value })
                             }).then(() => fetchAll());
                           }}
@@ -491,9 +517,8 @@ export default function Admin() {
                           className={`btn ${f.isPublished ? 'btn-outline' : 'btn-primary'}`} 
                           style={{ padding: '6px 12px', fontSize: '12px' }}
                           onClick={() => {
-                            fetch(`${API_URL}/lost-found/admin/found/${f._id}`, {
+                            adminFetch(`/lost-found/admin/found/${f._id}`, {
                               method: 'PUT',
-                              headers: { 'Content-Type': 'application/json' },
                               body: JSON.stringify({ isPublished: !f.isPublished })
                             }).then(() => fetchAll());
                           }}

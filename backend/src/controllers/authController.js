@@ -9,14 +9,18 @@ const generateToken = (id) => {
 
 // @desc Register user
 const registerUser = async (req, res) => {
-  const { name, email, password, role } = req.body;
+  const { name, email, password } = req.body;
   try {
+    if (!name || !email || !password) {
+      return res.status(400).json({ message: 'Name, email, and password are required' });
+    }
     const userExists = await User.findOne({ email });
     if (userExists) return res.status(400).json({ message: 'User already exists' });
 
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
+    const role = req.body.role === 'Driver' ? 'Driver' : 'Passenger';
     const user = await User.create({ name, email, password: hashedPassword, role });
     res.status(201).json({
       _id: user.id, name: user.name, email: user.email, role: user.role,

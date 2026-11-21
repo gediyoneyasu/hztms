@@ -2,7 +2,6 @@
 import { useAuth } from '../../context/AuthContext.jsx';
 import { API_URL } from '../../utils/constants.js';
 import { uploadImage } from '../../services/uploadService.js';
-import './Complaints.css';
 
 export default function Complaints() {
   const { user } = useAuth();

@@ -1,6 +1,7 @@
 ﻿const express = require('express');
 const router = express.Router();
 const { getRoutes, createRoute, deleteRoute } = require('../controllers/routeController');
-router.route('/').get(getRoutes).post(createRoute);
-router.route('/:id').delete(deleteRoute);
+const { admin, protect } = require('../middleware/authMiddleware');
+router.route('/').get(getRoutes).post(protect, admin, createRoute);
+router.route('/:id').delete(protect, admin, deleteRoute);
 module.exports = router;

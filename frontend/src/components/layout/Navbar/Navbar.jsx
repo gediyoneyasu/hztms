@@ -1,10 +1,12 @@
 ﻿import { useEffect, useRef, useState } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { useLanguage } from '../../../context/LanguageContext.jsx';
+import { useAuth } from '../../../context/AuthContext.jsx';
 import './Navbar.css';
 
 export default function Navbar() {
   const { t } = useLanguage();
+  const { user } = useAuth();
   const [servicesOpen, setServicesOpen] = useState(false);
   const dropdownRef = useRef(null);
   const location = useLocation();
@@ -36,7 +38,10 @@ export default function Navbar() {
       <NavLink to="/announcements" className={({ isActive }) => (isActive ? 'on' : '')}>{t('announcements')}</NavLink>
       <NavLink to="/about" className={({ isActive }) => (isActive ? 'on' : '')}>{t('about')}</NavLink>
       <NavLink to="/contact" className={({ isActive }) => (isActive ? 'on' : '')}>{t('contact')}</NavLink>
+      
     </nav>
   );
 }
+
+
 
