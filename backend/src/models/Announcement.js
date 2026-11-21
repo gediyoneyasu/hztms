@@ -7,7 +7,8 @@ const announcementSchema = new mongoose.Schema({
   date: { type: String, required: true },
   body: { type: String },
   body_en: { type: String },
-  body_am: { type: String }
+  body_am: { type: String },
+  image: { type: String, default: '' }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Announcement', announcementSchema);

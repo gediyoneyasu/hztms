@@ -8,7 +8,8 @@ const routeSchema = new mongoose.Schema({
   price: { type: Number, required: true },
   duration: { type: String, required: true },
   frequency: { type: String, required: true },
-  frequency_am: { type: String }
+  frequency_am: { type: String },
+  image: { type: String, default: '' }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Route', routeSchema);

@@ -1,7 +1,7 @@
 ﻿import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../../context/LanguageContext.jsx';
-import { API_URL } from '../../utils/constants.js';
+import { API_URL, FALLBACK_IMAGE } from '../../utils/constants.js';
 import './Routes.css';
 
 export default function RoutesPage() {
@@ -35,6 +35,7 @@ export default function RoutesPage() {
           <div className="grid">
             {routes.map((r) => (
               <div key={r._id} className="card lift route-card">
+                <img className="route-photo" src={r.image || FALLBACK_IMAGE} alt={r.to} />
                 <div className="eyebrow">{t('routeLabel')}</div>
                 <h3>
                   {lang === 'am' && r.from_am ? r.from_am : (r.from || 'Hossana')} 

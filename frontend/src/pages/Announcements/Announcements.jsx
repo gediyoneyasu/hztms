@@ -38,6 +38,7 @@ export default function Announcements() {
           <div className="grid">
             {items.map((a) => (
               <article key={a._id} className="card lift ann-card">
+                {a.image && <img className="ann-photo" src={a.image} alt="" />}
                 <div className="eyebrow">{a.date}</div>
                 
                 {/* Bilingual Title and Body */}

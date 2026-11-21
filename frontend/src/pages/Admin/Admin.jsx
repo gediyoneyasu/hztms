@@ -2,6 +2,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../../context/LanguageContext.jsx';
 import { API_URL } from '../../utils/constants.js';
+import { uploadImage } from '../../services/uploadService.js';
 import './Admin.css';
 
 export default function Admin() {
@@ -18,6 +19,9 @@ export default function Admin() {
   const [newRoute, setNewRoute] = useState({ from: 'Hossana', from_am: 'ሆሳና', to: '', to_am: '', price: '', duration: '', frequency: '', frequency_am: '' });
   const [newSchedule, setNewSchedule] = useState({ busId: '', from: 'Hossana', from_am: 'ሆሳና', to: '', to_am: '', departure: '', arrival: '', price: '' });
   const [newAnn, setNewAnn] = useState({ title_en: '', title_am: '', date: '', body_en: '', body_am: '' });
+  const [routeImage, setRouteImage] = useState(null);
+  const [annImage, setAnnImage] = useState(null);
+  const [saving, setSaving] = useState(false);
 
   const fetchAll = () => {
     Promise.all([
@@ -45,8 +49,19 @@ export default function Admin() {
 
   const addRoute = async (e) => {
     e.preventDefault();
-    await fetch(`${API_URL}/routes`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...newRoute, price: Number(newRoute.price) }) });
-    setNewRoute({ from: 'Hossana', from_am: 'ሆሳና', to: '', to_am: '', price: '', duration: '', frequency: '', frequency_am: '' }); fetchAll();
+    setSaving(true);
+    try {
+      const image = routeImage ? await uploadImage(routeImage) : '';
+      await fetch(`${API_URL}/routes`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...newRoute, price: Number(newRoute.price), image }) });
+      setNewRoute({ from: 'Hossana', from_am: 'ሆሳና', to: '', to_am: '', price: '', duration: '', frequency: '', frequency_am: '' });
+      setRouteImage(null);
+      e.target.reset();
+      fetchAll();
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setSaving(false);
+    }
   };
 
   const deleteRoute = async (id) => { if (window.confirm('Delete route?')) { await fetch(`${API_URL}/routes/${id}`, { method: 'DELETE' }); fetchAll(); } };
@@ -61,8 +76,19 @@ export default function Admin() {
 
   const addAnnouncement = async (e) => {
     e.preventDefault();
-    await fetch(`${API_URL}/announcements`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(newAnn) });
-    setNewAnn({ title_en: '', title_am: '', date: '', body_en: '', body_am: '' }); fetchAll();
+    setSaving(true);
+    try {
+      const image = annImage ? await uploadImage(annImage) : '';
+      await fetch(`${API_URL}/announcements`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...newAnn, image }) });
+      setNewAnn({ title_en: '', title_am: '', date: '', body_en: '', body_am: '' });
+      setAnnImage(null);
+      e.target.reset();
+      fetchAll();
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setSaving(false);
+    }
   };
 
   const deleteAnnouncement = async (id) => { if (window.confirm('Delete announcement?')) { await fetch(`${API_URL}/announcements/${id}`, { method: 'DELETE' }); fetchAll(); } };
@@ -157,18 +183,24 @@ export default function Admin() {
       <label>Frequency (Amharic)</label>
       <input className="field" placeholder="e.g. በየ3 ሰዓቱ" value={newRoute.frequency_am || ''} onChange={e => setNewRoute({...newRoute, frequency_am: e.target.value})} />
     </div>
+
+    <div className="input-group" style={{ gridColumn: '1 / -1' }}>
+      <label>Route image</label>
+      <input className="field" type="file" accept="image/*" onChange={e => setRouteImage(e.target.files?.[0] || null)} />
+    </div>
   </div>
   
-  <button className="btn btn-primary submit-btn" type="submit">
-    {t('addRouteBtn')}
+  <button className="btn btn-primary submit-btn" type="submit" disabled={saving}>
+    {saving ? 'Saving...' : t('addRouteBtn')}
   </button>
 </form>
             <div className="tw card" style={{ padding: 0 }}>
               <table>
-                <thead><tr><th>{t('colFrom')}</th><th>{t('colTo')}</th><th>{t('colPrice')}</th><th>{t('colDur')}</th><th>{t('colFreq')}</th><th>{t('colAction')}</th></tr></thead>
+                <thead><tr><th>Image</th><th>{t('colFrom')}</th><th>{t('colTo')}</th><th>{t('colPrice')}</th><th>{t('colDur')}</th><th>{t('colFreq')}</th><th>{t('colAction')}</th></tr></thead>
                 <tbody>
                   {routes.map(r => (
                     <tr key={r._id}>
+                      <td>{r.image ? <img src={r.image} alt="" className="admin-thumb" /> : '—'}</td>
                       <td>{r.from || 'Hossana'} ({r.from_am || 'ሆሳና'})</td>
                       <td>{r.to} ({r.to_am || '-'})</td>
                       <td>ETB {r.price}</td>
@@ -287,18 +319,24 @@ export default function Admin() {
       <label>Body (Amharic)</label>
       <textarea className="field" rows="3" placeholder="ማስታወቂያውን በአማርኛ ይጻፉ..." value={newAnn.body_am || ''} onChange={e => setNewAnn({...newAnn, body_am: e.target.value})} />
     </div>
+
+    <div className="input-group" style={{ gridColumn: '1 / -1' }}>
+      <label>Announcement image</label>
+      <input className="field" type="file" accept="image/*" onChange={e => setAnnImage(e.target.files?.[0] || null)} />
+    </div>
   </div>
   
-  <button className="btn btn-primary submit-btn" type="submit">
-    {t('addAnnBtn')}
+  <button className="btn btn-primary submit-btn" type="submit" disabled={saving}>
+    {saving ? 'Saving...' : t('addAnnBtn')}
   </button>
 </form>
             <div className="tw card" style={{ padding: 0 }}>
               <table>
-                <thead><tr><th>{t('colTitle')}</th><th>{t('colDate')}</th><th>{t('colAction')}</th></tr></thead>
+                <thead><tr><th>Image</th><th>{t('colTitle')}</th><th>{t('colDate')}</th><th>{t('colAction')}</th></tr></thead>
                 <tbody>
                   {announcements.map(a => (
                     <tr key={a._id}>
+                      <td>{a.image ? <img src={a.image} alt="" className="admin-thumb" /> : '—'}</td>
                       <td><b>{a.title_en || a.title}</b><br/><small className="muted">{a.title_am}</small></td>
                       <td>{a.date}</td>
                       <td><button className="btn btn-outline" style={{ padding: '6px 12px', fontSize: '12px' }} onClick={() => deleteAnnouncement(a._id)}>{t('btnDelete')}</button></td>
