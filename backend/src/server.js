@@ -38,8 +38,11 @@ app.use('/api/bookings', require('./routes/bookingRoutes'));
 app.use('/api/announcements', require('./routes/announcementRoutes'));
 app.use('/api/messages', require('./routes/messageRoutes'));
 app.use('/api/uploads', require('./routes/uploadRoutes'));
+app.use('/api/lost-found', require('./routes/lostFoundRoutes'));
+app.use('/api/complaints', require('./routes/complaintRoutes'));
 const { errorHandler } = require('./middleware/errorHandler');
 app.use(errorHandler);
 const PORT = process.env.PORT || 5000;
 connectDB().then(() => app.listen(PORT, () => console.log(`🚀 Server running on ${PORT}`)));
+
 
