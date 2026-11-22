@@ -4,6 +4,14 @@ import { useLanguage } from '../../../context/LanguageContext.jsx';
 import { API_URL } from '../../../utils/constants.js';
 import './Hero.css';
 
+// 👇 PASTE YOUR 4 IMAGE URLS HERE
+const HERO_IMAGES = [
+  "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=1200&q=80",
+  "https://images.unsplash.com/photo-1570125909232-eb263c188f7e?auto=format&fit=crop&w=1200&q=80",
+  "https://images.unsplash.com/photo-1464219789935-c2d9d9aba644?auto=format&fit=crop&w=1200&q=80",
+  "https://images.unsplash.com/photo-1494515843206-f3117d3f51b7?auto=format&fit=crop&w=1200&q=80"
+];
+
 export default function Hero() {
   const navigate = useNavigate();
   const { t } = useLanguage();
@@ -15,15 +23,14 @@ export default function Hero() {
     date: new Date().toISOString().slice(0, 10),
   });
 
-  // 1. Fetch data from Admin
+  const [currentSlide, setCurrentSlide] = useState(0);
+
   useEffect(() => {
     fetch(`${API_URL}/schedules`)
       .then(res => res.json())
       .then(data => {
         const list = Array.isArray(data) ? data : [];
         setAllSchedules(list);
-        
-        // Auto-select the first station and destination
         if (list.length > 0) {
           setTrip(prev => ({
             ...prev,
@@ -35,17 +42,18 @@ export default function Hero() {
       .catch(err => console.error("Failed to load schedules:", err));
   }, []);
 
-  // 2. Get the exact list of Stations the Admin added
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % HERO_IMAGES.length);
+    }, 2000);
+    return () => clearInterval(timer);
+  }, []);
+
   const availableStations = [...new Set(allSchedules.map(s => s.from || 'Hossana'))];
-  
-  // 3. Get the Destinations ONLY for the selected Station
   const availableDestinations = [...new Set(
-    allSchedules
-      .filter(s => (s.from || 'Hossana') === trip.from)
-      .map(s => s.to)
+    allSchedules.filter(s => (s.from || 'Hossana') === trip.from).map(s => s.to)
   )];
 
-  // 4. If the user changes the Station, automatically update the Destination to the first available one
   useEffect(() => {
     if (availableDestinations.length > 0 && !availableDestinations.includes(trip.to)) {
       setTrip(prev => ({ ...prev, to: availableDestinations[0] }));
@@ -61,6 +69,9 @@ export default function Hero() {
   const scrollToHow = () => {
     document.querySelector('.how')?.scrollIntoView({ behavior: 'smooth' });
   };
+
+  const nextSlide = () => setCurrentSlide((prev) => (prev + 1) % HERO_IMAGES.length);
+  const prevSlide = () => setCurrentSlide((prev) => (prev - 1 + HERO_IMAGES.length) % HERO_IMAGES.length);
 
   return (
     <section className="hero-section">
@@ -97,41 +108,48 @@ export default function Hero() {
             </div>
           </div>
         </div>
+        
         <div className="hero-right">
-          <img src="https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=1600&q=80" alt="Bus Travel" className="hero-img" />
-          <div className="floating-card">
-            <h4>{t('floatTitle')} <span className="dot green"></span></h4>
-            <p>{t('floatDesc')}</p>
-            <button className="float-btn" onClick={() => navigate('/schedules')}>+</button>
+          <div className="slider-container">
+            {HERO_IMAGES.map((img, index) => (
+              <img 
+                key={index}
+                src={img} 
+                alt={`Slide ${index + 1}`} 
+                className={`hero-img ${index === currentSlide ? 'active' : ''}`} 
+              />
+            ))}
+            
+            <button className="slider-arrow left" onClick={prevSlide}>‹</button>
+            <button className="slider-arrow right" onClick={nextSlide}>›</button>
+
+            <div className="slider-dots">
+              {HERO_IMAGES.map((_, index) => (
+                <span 
+                  key={index} 
+                  className={`dot ${index === currentSlide ? 'active' : ''}`}
+                  onClick={() => setCurrentSlide(index)}
+                ></span>
+              ))}
+            </div>
           </div>
         </div>
       </div>
 
       <div className="finder-wrapper">
         <form className="finder" onSubmit={handleSearch}>
-          
-          {/* STATION DROPDOWN */}
           <div>
             <label>{t('from')}</label>
-            <select 
-              className="field" 
-              value={trip.from} 
-              onChange={(e) => setTrip({ ...trip, from: e.target.value })}
-            >
+            <select className="field" value={trip.from} onChange={(e) => setTrip({ ...trip, from: e.target.value })}>
               {availableStations.map(station => (
                 <option key={station} value={station}>{station}</option>
               ))}
             </select>
           </div>
           
-          {/* DESTINATION DROPDOWN (Filtered) */}
           <div>
             <label>{t('to')}</label>
-            <select 
-              className="field" 
-              value={trip.to} 
-              onChange={(e) => setTrip({ ...trip, to: e.target.value })}
-            >
+            <select className="field" value={trip.to} onChange={(e) => setTrip({ ...trip, to: e.target.value })}>
               {availableDestinations.length > 0 ? (
                 availableDestinations.map(dest => (
                   <option key={dest} value={dest}>{dest}</option>
@@ -144,12 +162,7 @@ export default function Hero() {
           
           <div>
             <label>{t('date')}</label>
-            <input 
-              className="field" 
-              type="date" 
-              value={trip.date} 
-              onChange={(e) => setTrip({ ...trip, date: e.target.value })} 
-            />
+            <input className="field" type="date" value={trip.date} onChange={(e) => setTrip({ ...trip, date: e.target.value })} />
           </div>
           
           <button className="btn-primary-pill finder-btn" type="submit">
