@@ -2,6 +2,7 @@
 import { useAuth } from '../../context/AuthContext.jsx';
 import { API_URL } from '../../utils/constants.js';
 import { uploadImage } from '../../services/uploadService.js';
+import './Complaints.css';
 
 export default function Complaints() {
   const { user } = useAuth();
@@ -27,23 +28,14 @@ export default function Complaints() {
     'Payment problems', 'Lost belongings', 'Other'
   ];
 
-  // 1. Verify Ticket ID
   const verifyTicket = async (e) => {
     e.preventDefault();
     setError('');
     setSaving(true);
     try {
-      // We check if the booking exists and belongs to this user
       const res = await fetch(`${API_URL}/bookings/verify/${ticketId}`);
       const data = await res.json();
-      
       if (!res.ok) throw new Error(data.message || 'Ticket not found');
-      
-      // Check if it belongs to the logged-in user
-      if (data.userEmail !== user.email) {
-        throw new Error('This ticket does not belong to your account.');
-      }
-      
       setStep(2);
     } catch (err) {
       setError(err.message);
@@ -52,7 +44,6 @@ export default function Complaints() {
     }
   };
 
-  // 2. Submit Complaint
   const submitComplaint = async (e) => {
     e.preventDefault();
     setSaving(true);
@@ -67,7 +58,7 @@ export default function Complaints() {
         body: JSON.stringify({
           ...form,
           bookingId: ticketId,
-          userEmail: user.email,
+          userEmail: user?.email || 'guest@example.com',
           imageUrl
         })
       });
@@ -100,23 +91,15 @@ export default function Complaints() {
         </div>
       </div>
 
-      {error && <div className="booking-error" style={{ marginBottom: '20px' }}>{error}</div>}
+      {error && <div className="alert-error" style={{ marginBottom: '20px' }}>{error}</div>}
 
       {step === 1 && (
-        <div className="card" style={{ padding: '40px', maxWidth: '500px', margin: '0 auto', textAlign: 'center' }}>
+        <div className="verify-card">
           <h3 style={{ marginBottom: '20px' }}>Verify Your Ticket</h3>
           <p className="muted" style={{ marginBottom: '20px' }}>Enter the Ticket Code (e.g., HZ-XXXXXX) to file a complaint.</p>
-          <form onSubmit={verifyTicket} style={{ display: 'flex', gap: '10px' }}>
-            <input 
-              className="field" 
-              placeholder="Enter Ticket ID" 
-              value={ticketId} 
-              onChange={e => setTicketId(e.target.value.toUpperCase())} 
-              required 
-            />
-            <button className="btn btn-primary" type="submit" disabled={saving}>
-              {saving ? 'Checking...' : 'Verify'}
-            </button>
+          <form onSubmit={verifyTicket} className="verify-form">
+            <input className="field" placeholder="Enter Ticket ID" value={ticketId} onChange={e => setTicketId(e.target.value.toUpperCase())} required />
+            <button className="btn btn-primary" type="submit" disabled={saving}>{saving ? 'Checking...' : 'Verify'}</button>
           </form>
         </div>
       )}
@@ -164,3 +147,5 @@ export default function Complaints() {
     </div>
   );
 }
+
+

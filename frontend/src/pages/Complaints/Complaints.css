@@ -1,2 +1,66 @@
-﻿/* Complaints Page Styles */
-.tabs { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+﻿.tabs { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+
+/* Centered, modern Verify Card */
+.verify-card {
+  background: var(--card);
+  padding: 40px;
+  max-width: 480px;
+  margin: 40px auto;
+  text-align: center;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+  border: 1px solid var(--border);
+}
+
+.verify-card h3 {
+  font-size: 24px;
+  color: var(--primary);
+  margin-bottom: 8px;
+}
+
+.verify-card p {
+  font-size: 15px;
+  margin-bottom: 24px;
+}
+
+.verify-form {
+  display: flex;
+  gap: 10px;
+}
+
+.verify-form input {
+  flex: 1;
+  text-align: center;
+  font-size: 16px;
+  letter-spacing: 1px;
+  font-weight: 600;
+}
+
+.verify-form button {
+  padding: 0 24px;
+  white-space: nowrap;
+}
+
+/* Modern Error Alert */
+.alert-error {
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+  padding: 14px 20px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  margin: 0 auto 20px auto;
+  max-width: 700px;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}

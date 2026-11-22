@@ -2,23 +2,19 @@
 import { useAuth } from '../../context/AuthContext.jsx';
 import { API_URL } from '../../utils/constants.js';
 import { uploadImage } from '../../services/uploadService.js';
+import './LostFound.css';
 
 export default function LostFound() {
   const { user } = useAuth();
-  const [tab, setTab] = useState('lost'); // 'lost' | 'found' | 'view'
+  const [tab, setTab] = useState('lost'); 
   
-  // State for reporting lost item
   const [step, setStep] = useState(1);
   const [ticketId, setTicketId] = useState('');
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
   const [image, setImage] = useState(null);
   const [lostForm, setLostForm] = useState({ itemName: '', category: '', description: '', lostDate: '', lostLocation: '', contactPhone: '' });
-
-  // State for reporting found item
   const [foundForm, setFoundForm] = useState({ itemName: '', category: '', description: '', foundDate: '', foundLocation: '', foundBy: '', contactPhone: '' });
-  
-  // State for public list
   const [foundItems, setFoundItems] = useState([]);
 
   useEffect(() => {
@@ -38,7 +34,6 @@ export default function LostFound() {
       const res = await fetch(`${API_URL}/bookings/verify/${ticketId}`);
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Ticket not found');
-      if (data.userEmail !== user.email) throw new Error('This ticket does not belong to your account.');
       setStep(2);
     } catch (err) {
       setError(err.message);
@@ -56,7 +51,7 @@ export default function LostFound() {
       await fetch(`${API_URL}/lost-found/lost`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...lostForm, bookingId: ticketId, userEmail: user.email, imageUrl })
+        body: JSON.stringify({ ...lostForm, bookingId: ticketId, userEmail: user?.email || 'guest@example.com', imageUrl })
       });
       alert('Lost item reported successfully!');
       setTab('view');
@@ -76,7 +71,7 @@ export default function LostFound() {
       await fetch(`${API_URL}/lost-found/found`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...foundForm, imageUrl })
+        body: JSON.stringify({ ...foundForm, bookingId: ticketId, userEmail: user?.email || 'guest@example.com', imageUrl })
       });
       alert('Found item reported! Admin will review and publish it soon.');
       setTab('view');
@@ -97,19 +92,18 @@ export default function LostFound() {
       </div>
 
       <div className="tabs" style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
-        <button className={`btn ${tab === 'lost' ? 'btn-primary' : 'btn-outline'}`} onClick={() => setTab('lost')}>Report Lost Item</button>
-        <button className={`btn ${tab === 'found' ? 'btn-primary' : 'btn-outline'}`} onClick={() => setTab('found')}>Report Found Item</button>
+        <button className={`btn ${tab === 'lost' ? 'btn-primary' : 'btn-outline'}`} onClick={() => { setTab('lost'); setStep(1); }}>Report Lost Item</button>
+        <button className={`btn ${tab === 'found' ? 'btn-primary' : 'btn-outline'}`} onClick={() => { setTab('found'); setStep(1); }}>Report Found Item</button>
         <button className={`btn ${tab === 'view' ? 'btn-primary' : 'btn-outline'}`} onClick={() => setTab('view')}>View Found Items</button>
       </div>
 
-      {error && <div className="booking-error">{error}</div>}
+      {error && <div className="alert-error">{error}</div>}
 
-      {/* REPORT LOST ITEM */}
       {tab === 'lost' && step === 1 && (
-        <div className="card" style={{ padding: '40px', maxWidth: '500px', margin: '0 auto', textAlign: 'center' }}>
+        <div className="verify-card">
           <h3>Verify Your Ticket</h3>
           <p className="muted" style={{ marginBottom: '20px' }}>Enter your Ticket Code to report a lost item.</p>
-          <form onSubmit={verifyTicket} style={{ display: 'flex', gap: '10px' }}>
+          <form onSubmit={verifyTicket} className="verify-form">
             <input className="field" placeholder="Ticket ID" value={ticketId} onChange={e => setTicketId(e.target.value.toUpperCase())} required />
             <button className="btn btn-primary" type="submit" disabled={saving}>{saving ? 'Checking...' : 'Verify'}</button>
           </form>
@@ -132,8 +126,18 @@ export default function LostFound() {
         </form>
       )}
 
-      {/* REPORT FOUND ITEM */}
-      {tab === 'found' && (
+      {tab === 'found' && step === 1 && (
+        <div className="verify-card">
+          <h3>Verify Your Ticket</h3>
+          <p className="muted" style={{ marginBottom: '20px' }}>Enter your Ticket Code to report a found item.</p>
+          <form onSubmit={verifyTicket} className="verify-form">
+            <input className="field" placeholder="Ticket ID" value={ticketId} onChange={e => setTicketId(e.target.value.toUpperCase())} required />
+            <button className="btn btn-primary" type="submit" disabled={saving}>{saving ? 'Checking...' : 'Verify'}</button>
+          </form>
+        </div>
+      )}
+
+      {tab === 'found' && step === 2 && (
         <form className="card register-form" onSubmit={submitFoundItem}>
           <h3 className="form-section-title">Report a Found Item</h3>
           <p className="muted" style={{ marginBottom: '15px' }}>Anyone can report a found item. The Admin will review it before publishing.</p>
@@ -151,16 +155,15 @@ export default function LostFound() {
         </form>
       )}
 
-      {/* VIEW PUBLISHED FOUND ITEMS */}
       {tab === 'view' && (
-        <div className="grid">
+        <div className="found-grid">
           {foundItems.length === 0 ? <p className="muted">No published found items yet.</p> : foundItems.map(item => (
-            <div key={item._id} className="card lift" style={{ padding: '20px' }}>
+            <div key={item._id} className="found-card">
               {item.imageUrl && <img src={item.imageUrl} alt={item.itemName} style={{ width: '100%', height: '150px', objectFit: 'cover', borderRadius: '8px', marginBottom: '15px' }} />}
               <h3 style={{ color: 'var(--primary)' }}>{item.itemName}</h3>
-              <p className="muted">{item.category} • {item.foundLocation}</p>
+              <p className="muted">{item.category} • {item.foundLocation || item.lostLocation}</p>
               <p style={{ marginTop: '10px' }}>{item.description}</p>
-              <p style={{ marginTop: '10px', fontSize: '13px', color: 'var(--mfg)' }}>Found on: {item.foundDate}</p>
+              <p style={{ marginTop: '10px', fontSize: '13px', color: 'var(--mfg)' }}>Found on: {item.foundDate || item.lostDate}</p>
               <button className="btn btn-outline" style={{ width: '100%', marginTop: '15px' }}>Claim Item</button>
             </div>
           ))}

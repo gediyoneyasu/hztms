@@ -459,10 +459,43 @@ export default function Admin() {
           </div>
         )}
 
-        {/* LOST ITEMS TAB */}
+                {/* LOST ITEMS TAB */}
         {tab === 'lostItems' && (
           <div className="admin-section">
-            <h1>Lost Item Reports</h1>
+            <h1>Manage Lost Items</h1>
+            
+            {/* Form to add lost item manually */}
+            <form className="admin-form register-form" onSubmit={async (e) => {
+              e.preventDefault();
+              const formData = new FormData(e.target);
+              await adminFetch('/lost-found/lost', {
+                method: 'POST',
+                body: JSON.stringify({
+                  itemName: formData.get('itemName'),
+                  category: formData.get('category'),
+                  description: formData.get('description'),
+                  lostDate: formData.get('lostDate'),
+                  lostLocation: formData.get('lostLocation'),
+                  contactPhone: formData.get('contactPhone'),
+                  bookingId: 'ADMIN-ADDED',
+                  userEmail: 'admin@hztms.com'
+                })
+              });
+              e.target.reset();
+              fetchAll();
+            }}>
+              <h3 className="form-section-title">Add Lost Item Manually</h3>
+              <div className="form-grid">
+                <div className="input-group"><label>Item Name</label><input name="itemName" className="field" required /></div>
+                <div className="input-group"><label>Category</label><input name="category" className="field" required /></div>
+                <div className="input-group" style={{ gridColumn: '1 / -1' }}><label>Description</label><textarea name="description" className="field" rows="2" required /></div>
+                <div className="input-group"><label>Date Lost</label><input name="lostDate" type="date" className="field" required /></div>
+                <div className="input-group"><label>Location</label><input name="lostLocation" className="field" required /></div>
+                <div className="input-group"><label>Contact Phone</label><input name="contactPhone" className="field" required /></div>
+              </div>
+              <button className="btn btn-primary submit-btn" type="submit">Add Lost Item</button>
+            </form>
+
             <div className="tw card" style={{ padding: 0 }}>
               <table>
                 <thead><tr><th>Item</th><th>Ticket</th><th>Status</th><th>Action</th></tr></thead>
@@ -470,7 +503,7 @@ export default function Admin() {
                   {lostItems?.length === 0 ? <tr><td colSpan="4">No lost items reported.</td></tr> : lostItems?.map(l => (
                     <tr key={l._id}>
                       <td><b>{l.itemName}</b><br/><small className="muted">{l.category}</small></td>
-                      <td>{l.bookingId}</td>
+                      <td>{l.bookingId === 'ADMIN-ADDED' ? <span className='muted'>Admin Added</span> : l.bookingId}</td>
                       <td><span className={`st ${l.status}`}>{l.status}</span></td>
                       <td>
                         <select 
@@ -499,28 +532,35 @@ export default function Admin() {
           </div>
         )}
 
-        {/* FOUND ITEMS TAB */}
+                        {/* FOUND ITEMS TAB */}
         {tab === 'foundItems' && (
           <div className="admin-section">
-            <h1>Found Item Reports</h1>
+            <h1>Found Item Reports (Review & Publish)</h1>
+            <p className="muted" style={{ marginBottom: '20px' }}>
+              When a user reports a found item, it appears here. Click "Publish" to make it visible to the public.
+            </p>
             <div className="tw card" style={{ padding: 0 }}>
               <table>
-                <thead><tr><th>Item</th><th>Location</th><th>Status</th><th>Action</th></tr></thead>
+                <thead><tr><th>Item</th><th>Location</th><th>Status</th><th>Visibility</th></tr></thead>
                 <tbody>
                   {foundItems?.length === 0 ? <tr><td colSpan="4">No found items reported.</td></tr> : foundItems?.map(f => (
                     <tr key={f._id}>
-                      <td><b>{f.itemName}</b><br/><small className="muted">{f.category}</small></td>
+                      <td>
+                        <b>{f.itemName}</b><br/>
+                        <small className="muted">{f.category} • {f.description}</small>
+                      </td>
                       <td>{f.foundLocation}</td>
                       <td><span className={`st ${f.status}`}>{f.status}</span></td>
                       <td>
                         <button 
                           className={`btn ${f.isPublished ? 'btn-outline' : 'btn-primary'}`} 
-                          style={{ padding: '6px 12px', fontSize: '12px' }}
-                          onClick={() => {
-                            adminFetch(`/lost-found/admin/found/${f._id}`, {
+                          style={{ padding: '6px 12px', fontSize: '12px', minWidth: '100px' }}
+                          onClick={async () => {
+                            await adminFetch(`/lost-found/admin/found/${f._id}`, {
                               method: 'PUT',
                               body: JSON.stringify({ isPublished: !f.isPublished })
-                            }).then(() => fetchAll());
+                            });
+                            fetchAll(); // Refresh the list immediately
                           }}
                         >
                           {f.isPublished ? 'Unpublish' : 'Publish'}
@@ -537,6 +577,10 @@ export default function Admin() {
     </div>
   );
 }
+
+
+
+
 
 
 

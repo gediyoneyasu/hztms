@@ -1,6 +1,40 @@
-﻿.dash-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; border-bottom: 1px solid var(--border); padding-bottom: 20px; }
+﻿.dash-header { 
+  display: flex; justify-content: space-between; align-items: center; 
+  margin-bottom: 30px; border-bottom: 1px solid var(--border); padding-bottom: 20px; 
+}
 .dash-header h1 { font-size: 32px; }
-.dash-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 24px; }
-.dash-card { padding: 30px; }
-.dash-card h3 { font-size: 20px; margin-bottom: 8px; }
-.dash-card .btn { width: 100%; justify-content: center; }
+
+.dash-tabs {
+  display: flex; gap: 10px; margin-bottom: 30px; background: var(--bg); padding: 6px; border-radius: 12px; width: fit-content;
+}
+.dash-tabs button {
+  background: transparent; border: 0; padding: 10px 20px; border-radius: 8px; cursor: pointer;
+  font-weight: 600; color: var(--mfg); transition: 0.2s; font-size: 15px;
+}
+.dash-tabs button:hover { background: rgba(0,0,0,0.05); }
+.dash-tabs button.active { background: var(--primary); color: #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+
+.tab-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.tab-header h2 { font-size: 22px; color: var(--primary); }
+
+.dash-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px; }
+
+.dash-ticket-card { padding: 24px; display: flex; flex-direction: column; gap: 8px; }
+.dash-ticket-card p { font-size: 14px; margin: 0; color: var(--mfg); }
+.dash-ticket-card p b { color: var(--fg); }
+
+.ticket-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.ticket-top b { font-size: 18px; color: var(--primary); letter-spacing: 1px; }
+
+.ticket-footer { margin-top: auto; padding-top: 16px; border-top: 1px solid var(--border); font-size: 12px; color: var(--mfg); }
+
+.empty-state { padding: 40px; text-align: center; background: var(--card); border: 1px dashed var(--border); border-radius: 12px; color: var(--mfg); }
+
+.admin-reply { background: #f0fdf4; border: 1px solid #bbf7d0; padding: 10px; border-radius: 6px; font-size: 13px; color: #166534; margin-top: 8px; }
+
+/* Status Badges */
+.st { padding: 4px 10px; border-radius: 50px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+.st.Confirmed, .st.Resolved, .st.Returned, .st.Found { background: #dcfce7; color: #15803d; }
+.st.Pending, .st.Reported { background: #fef3c7; color: #d97706; }
+.st.Cancelled, .st.Rejected { background: #fee2e2; color: #b91c1c; }
+.st.In-Progress, .st.Under-Review { background: #e0f2fe; color: #0369a1; }

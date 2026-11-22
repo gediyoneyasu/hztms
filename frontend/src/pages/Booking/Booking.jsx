@@ -157,6 +157,7 @@ export default function Booking() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           scheduleId: bus._id,
+          userEmail: user?.email || 'guest@example.com',
           passengerName: passenger.name,
           userEmail: user?.email || 'guest@example.com',
           phone: passenger.phone,
@@ -406,5 +407,6 @@ export default function Booking() {
     </>
   );
 }
+
 
 
