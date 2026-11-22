@@ -1,0 +1,776 @@
+
+==========================================
+FILE: C:\Users\gediy\Desktop\all in one\class\final project\real work\hztms\backend\src\config\cloudinary.js
+==========================================
+const cloudinary = require('cloudinary').v2;
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+async function uploadImage(file) {
+  if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
+    throw new Error('Cloudinary is not configured');
+  }
+
+  const dataUri = `data:${file.mimetype};base64,${file.buffer.toString('base64')}`;
+  const result = await cloudinary.uploader.upload(dataUri, {
+    folder: 'hztms',
+    resource_type: 'image',
+    access_mode: 'public',
+  });
+
+  return { url: result.secure_url, publicId: result.public_id };
+}
+
+module.exports = { cloudinary, uploadImage };
+
+==========================================
+FILE: C:\Users\gediy\Desktop\all in one\class\final project\real work\hztms\backend\src\config\db.js
+==========================================
+const mongoose = require('mongoose');
+const dotenv = require('dotenv');
+
+dotenv.config();
+
+const connectDB = async () => {
+  try {
+    const uri = process.env.MONGODB_URI || process.env.MONGO_URI;
+    if (!uri) throw new Error('Set MONGODB_URI in the environment');
+    const conn = await mongoose.connect(uri);
+    console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
+  } catch (error) {
+    console.error(`❌ Error: ${error.message}`);
+    process.exit(1);
+  }
+};
+
+module.exports = connectDB;
+
+
+==========================================
+FILE: C:\Users\gediy\Desktop\all in one\class\final project\real work\hztms\backend\src\config\env.js
+==========================================
+
+==========================================
+FILE: C:\Users\gediy\Desktop\all in one\class\final project\real work\hztms\backend\src\controllers\announcementController.js
+==========================================
+const Announcement = require('../models/Announcement');
+const getAnnouncements = async (req, res) => { try { res.json(await Announcement.find().sort({createdAt: -1})); } catch (e) { res.status(500).json({message: e.message}); } };
+const createAnnouncement = async (req, res) => { try { res.status(201).json(await Announcement.create(req.body)); } catch (e) { res.status(500).json({message: e.message}); } };
+const deleteAnnouncement = async (req, res) => { try { await Announcement.findByIdAndDelete(req.params.id); res.json({message: 'Deleted'}); } catch (e) { res.status(500).json({message: e.message}); } };
+module.exports = { getAnnouncements, createAnnouncement, deleteAnnouncement };
+
+==========================================
+FILE: C:\Users\gediy\Desktop\all in one\class\final project\real work\hztms\backend\src\controllers\authController.js
+==========================================
+const User = require('../models/User');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+
+// Generate JWT
+const generateToken = (id) => {
+  return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '30d' });
+};
+
+// @desc Register user
+const registerUser = async (req, res) => {
+  const { name, email, password } = req.body;
+  try {
+    if (!name || !email || !password) {
+      return res.status(400).json({ message: 'Name, email, and password are required' });
+    }
+    const userExists = await User.findOne({ email });
+    if (userExists) return res.status(400).json({ message: 'User already exists' });
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    const role = req.body.role === 'Driver' ? 'Driver' : 'Passenger';
+    const user = await User.create({ name, email, password: hashedPassword, role });
+    res.status(201).json({
+      _id: user.id, name: user.name, email: user.email, role: user.role,
+      token: generateToken(user._id)
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc Login user
+const loginUser = async (req, res) => {
+  const { email, password } = req.body;
+  try {
+    const user = await User.findOne({ email });
+    if (user && (await bcrypt.compare(password, user.password))) {
+      res.json({
+        _id: user.id, name: user.name, email: user.email, role: user.role,
+        token: generateToken(user._id)
+      });
+    } else {
+      res.status(401).json({ message: 'Invalid credentials' });
+    }
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+module.exports = { registerUser, loginUser };
+
+==========================================
+FILE: C:\Users\gediy\Desktop\all in one\class\final project\real work\hztms\backend\src\controllers\bookingController.js
+==========================================
+const Booking = require('../models/Booking');
+const { generateCode } = require('../utils/generateCode');
+const createBooking = async (req, res) => {
+  try {
+    const { scheduleId, passengerName, phone, seats } = req.body;
+    if (!scheduleId || !passengerName || !phone) return res.status(400).json({ message: 'Missing fields' });
+    const ticketCode = generateCode();
+    const booking = await Booking.create({ ticketCode, scheduleId, passengerName, phone, seats: seats || 1 });
+    res.status(201).json(booking);
+  } catch (error) { res.status(500).json({ message: error.message }); }
+};
+const getBookings = async (req, res) => {
+  try { res.json(await Booking.find().populate('scheduleId')); } catch (error) { res.status(500).json({ message: error.message }); }
+};
+const updateBookingStatus = async (req, res) => {
+  try {
+    const booking = await Booking.findById(req.params.id);
+    if (!booking) return res.status(404).json({ message: 'Not found' });
+    booking.status = req.body.status;
+    res.json(await booking.save());
+  } catch (error) { res.status(500).json({ message: error.message }); }
+};
+module.exports = { createBooking, getBookings, updateBookingStatus };
+
+==========================================
+FILE: C:\Users\gediy\Desktop\all in one\class\final project\real work\hztms\backend\src\controllers\chatController.js
+==========================================
+
+==========================================
+FILE: C:\Users\gediy\Desktop\all in one\class\final project\real work\hztms\backend\src\controllers\complaintController.js
+==========================================
+const Complaint = require('../models/Complaint');
+const Booking = require('../models/Booking');
+
+const generateComplaintId = () => 'CMP-' + Math.random().toString(36).substr(2, 6).toUpperCase();
+
+const createComplaint = async (req, res) => {
+  try {
+    const { bookingId, userEmail } = req.body;
+    const booking = await Booking.findOne({ ticketCode: bookingId });
+    if (!booking) return res.status(404).json({ message: 'Invalid Ticket ID. No booking found.' });
+    if (booking.userEmail !== userEmail) return res.status(403).json({ message: 'This ticket does not belong to you.' });
+    const complaintId = generateComplaintId();
+    const complaint = await Complaint.create({ ...req.body, complaintId });
+    res.status(201).json(complaint);
+  } catch (err) { res.status(500).json({ message: err.message }); }
+};
+
+const getComplaints = async (req, res) => {
+  try { res.json(await Complaint.find().sort({ createdAt: -1 })); } catch (err) { res.status(500).json({ message: err.message }); }
+};
+
+const getMyComplaints = async (req, res) => {
+  try { res.json(await Complaint.find({ userEmail: req.params.email }).sort({ createdAt: -1 })); } catch (err) { res.status(500).json({ message: err.message }); }
+};
+
+const updateComplaint = async (req, res) => {
+  try {
+    const updated = await Complaint.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    res.json(updated);
+  } catch (err) { res.status(500).json({ message: err.message }); }
+};
+
+module.exports = { createComplaint, getComplaints, getMyComplaints, updateComplaint };
+
+==========================================
+FILE: C:\Users\gediy\Desktop\all in one\class\final project\real work\hztms\backend\src\controllers\lostFoundController.js
+==========================================
+const LostItem = require('../models/LostItem');
+const FoundItem = require('../models/FoundItem');
+const Booking = require('../models/Booking');
+
+const createLostItem = async (req, res) => {
+  try {
+    const { bookingId, userEmail } = req.body;
+    const booking = await Booking.findOne({ ticketCode: bookingId });
+    if (!booking) return res.status(404).json({ message: 'Invalid Ticket ID. No booking found.' });
+    if (booking.userEmail !== userEmail) return res.status(403).json({ message: 'This ticket does not belong to you.' });
+    const item = await LostItem.create(req.body);
+    res.status(201).json(item);
+  } catch (err) { res.status(500).json({ message: err.message }); }
+};
+
+const getLostItems = async (req, res) => {
+  try { res.json(await LostItem.find().sort({ createdAt: -1 })); } catch (err) { res.status(500).json({ message: err.message }); }
+};
+
+const createFoundItem = async (req, res) => {
+  try {
+    const item = await FoundItem.create(req.body);
+    res.status(201).json(item);
+  } catch (err) { res.status(500).json({ message: err.message }); }
+};
+
+const getFoundItems = async (req, res) => {
+  try { res.json(await FoundItem.find({ isPublished: true }).sort({ createdAt: -1 })); } catch (err) { res.status(500).json({ message: err.message }); }
+};
+
+const getAdminFoundItems = async (req, res) => {
+  try { res.json(await FoundItem.find().sort({ createdAt: -1 })); } catch (err) { res.status(500).json({ message: err.message }); }
+};
+
+const updateFoundItemStatus = async (req, res) => {
+  try {
+    const item = await FoundItem.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    res.json(item);
+  } catch (err) { res.status(500).json({ message: err.message }); }
+};
+
+module.exports = { createLostItem, getLostItems, createFoundItem, getFoundItems, getAdminFoundItems, updateFoundItemStatus };
+
+==========================================
+FILE: C:\Users\gediy\Desktop\all in one\class\final project\real work\hztms\backend\src\controllers\lostItemController.js
+==========================================
+
+==========================================
+FILE: C:\Users\gediy\Desktop\all in one\class\final project\real work\hztms\backend\src\controllers\messageController.js
+==========================================
+const Message = require('../models/Message');
+const getMessages = async (req, res) => { try { res.json(await Message.find().sort({createdAt: -1})); } catch (e) { res.status(500).json({message: e.message}); } };
+const createMessage = async (req, res) => { try { res.status(201).json(await Message.create(req.body)); } catch (e) { res.status(500).json({message: e.message}); } };
+module.exports = { getMessages, createMessage };
+
+==========================================
+FILE: C:\Users\gediy\Desktop\all in one\class\final project\real work\hztms\backend\src\controllers\routeController.js
+==========================================
+const Route = require('../models/Route');
+const getRoutes = async (req, res) => { try { res.json(await Route.find()); } catch (e) { res.status(500).json({message: e.message}); } };
+const createRoute = async (req, res) => { try { res.status(201).json(await Route.create(req.body)); } catch (e) { res.status(500).json({message: e.message}); } };
+const deleteRoute = async (req, res) => { try { await Route.findByIdAndDelete(req.params.id); res.json({message: 'Deleted'}); } catch (e) { res.status(500).json({message: e.message}); } };
+module.exports = { getRoutes, createRoute, deleteRoute };
+
+==========================================
+FILE: C:\Users\gediy\Desktop\all in one\class\final project\real work\hztms\backend\src\controllers\scheduleController.js
+==========================================
+const Schedule = require('../models/Schedule');
+const getSchedules = async (req, res) => { try { res.json(await Schedule.find()); } catch (e) { res.status(500).json({message: e.message}); } };
+const createSchedule = async (req, res) => { try { res.status(201).json(await Schedule.create(req.body)); } catch (e) { res.status(500).json({message: e.message}); } };
+const deleteSchedule = async (req, res) => { try { await Schedule.findByIdAndDelete(req.params.id); res.json({message: 'Deleted'}); } catch (e) { res.status(500).json({message: e.message}); } };
+const updateScheduleStatus = async (req, res) => {
+  try {
+    const s = await Schedule.findById(req.params.id);
+    s.status = req.body.status;
+    res.json(await s.save());
+  } catch (e) { res.status(500).json({message: e.message}); }
+};
+module.exports = { getSchedules, createSchedule, deleteSchedule, updateScheduleStatus };
+
+==========================================
+FILE: C:\Users\gediy\Desktop\all in one\class\final project\real work\hztms\backend\src\middleware\authMiddleware.js
+==========================================
+const jwt = require('jsonwebtoken');
+const User = require('../models/User');
+
+const protect = async (req, res, next) => {
+  const authorization = req.headers.authorization || '';
+  const [scheme, token] = authorization.split(' ');
+  if (scheme !== 'Bearer' || !token) {
+    return res.status(401).json({ message: 'Authentication required' });
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.id).select('-password');
+    if (!user) return res.status(401).json({ message: 'User account not found' });
+    req.user = user;
+    return next();
+  } catch (error) {
+    return res.status(401).json({ message: 'Invalid or expired authentication token' });
+  }
+};
+
+const admin = (req, res, next) => {
+  if (req.user?.role !== 'Admin') {
+    return res.status(403).json({ message: 'Administrator access required' });
+  }
+  return next();
+};
+
+module.exports = { protect, admin };
+
+==========================================
+FILE: C:\Users\gediy\Desktop\all in one\class\final project\real work\hztms\backend\src\middleware\errorHandler.js
+==========================================
+const errorHandler = (err, req, res, next) => {
+  const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
+  res.status(statusCode);
+  res.json({
+    message: err.message,
+    stack: process.env.NODE_ENV === 'production' ? null : err.stack,
+  });
+};
+
+module.exports = { errorHandler };
+
+==========================================
+FILE: C:\Users\gediy\Desktop\all in one\class\final project\real work\hztms\backend\src\middleware\rateLimiter.js
+==========================================
+
+==========================================
+FILE: C:\Users\gediy\Desktop\all in one\class\final project\real work\hztms\backend\src\middleware\upload.js
+==========================================
+const multer = require('multer');
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter(req, file, callback) {
+    if (!file.mimetype.startsWith('image/')) {
+      callback(new Error('Only image files are allowed'));
+      return;
+    }
+    callback(null, true);
+  },
+});
+
+module.exports = upload;
+
+==========================================
+FILE: C:\Users\gediy\Desktop\all in one\class\final project\real work\hztms\backend\src\middleware\validateRequest.js
+==========================================
+
+==========================================
+FILE: C:\Users\gediy\Desktop\all in one\class\final project\real work\hztms\backend\src\models\Announcement.js
+==========================================
+const mongoose = require('mongoose');
+
+const announcementSchema = new mongoose.Schema({
+  title: { type: String },
+  title_en: { type: String },
+  title_am: { type: String },
+  date: { type: String, required: true },
+  body: { type: String },
+  body_en: { type: String },
+  body_am: { type: String },
+  image: { type: String, default: '' }
+}, { timestamps: true });
+
+module.exports = mongoose.model('Announcement', announcementSchema);
+
+==========================================
+FILE: C:\Users\gediy\Desktop\all in one\class\final project\real work\hztms\backend\src\models\Booking.js
+==========================================
+const mongoose = require('mongoose');
+const bookingSchema = new mongoose.Schema({
+  ticketCode: { type: String, required: true, unique: true },
+  scheduleId: { type: mongoose.Schema.Types.ObjectId, ref: 'Schedule', required: true },
+  passengerName: { type: String, required: true },
+  phone: { type: String, required: true },
+  userEmail: { type: String, default: 'guest@example.com' }, // Fixed: Now optional with default
+  seats: { type: Number, required: true, default: 1 },
+  status: { type: String, enum: ['Pending', 'Confirmed', 'Cancelled'], default: 'Pending' }
+}, { timestamps: true });
+module.exports = mongoose.model('Booking', bookingSchema);
+
+==========================================
+FILE: C:\Users\gediy\Desktop\all in one\class\final project\real work\hztms\backend\src\models\Complaint.js
+==========================================
+const mongoose = require('mongoose');
+
+const complaintSchema = new mongoose.Schema({
+  complaintId: { type: String, required: true, unique: true }, // Generated ID
+  bookingId: { type: String, required: true },
+  category: { type: String, required: true },
+  subject: { type: String, required: true },
+  description: { type: String, required: true },
+  travelDate: { type: String },
+  busPlate: { type: String },
+  imageUrl: { type: String },
+  contactPhone: { type: String, required: true },
+  userEmail: { type: String, required: true },
+  status: { type: String, enum: ['Pending', 'Under Review', 'In Progress', 'Resolved', 'Rejected'], default: 'Pending' },
+  adminResponse: { type: String, default: '' }
+}, { timestamps: true });
+
+module.exports = mongoose.model('Complaint', complaintSchema);
+
+==========================================
+FILE: C:\Users\gediy\Desktop\all in one\class\final project\real work\hztms\backend\src\models\FoundItem.js
+==========================================
+const mongoose = require('mongoose');
+
+const foundItemSchema = new mongoose.Schema({
+  itemName: { type: String, required: true },
+  category: { type: String, required: true },
+  description: { type: String, required: true },
+  foundDate: { type: String, required: true },
+  foundLocation: { type: String, required: true },
+  busPlate: { type: String },
+  foundBy: { type: String, required: true },
+  contactPhone: { type: String, required: true },
+  imageUrl: { type: String },
+  isPublished: { type: Boolean, default: false }, // Admin must publish
+  status: { type: String, enum: ['Reported', 'Published', 'Claim Pending', 'Returned', 'Rejected', 'Unclaimed'], default: 'Reported' }
+}, { timestamps: true });
+
+module.exports = mongoose.model('FoundItem', foundItemSchema);
+
+==========================================
+FILE: C:\Users\gediy\Desktop\all in one\class\final project\real work\hztms\backend\src\models\LostItem.js
+==========================================
+const mongoose = require('mongoose');
+
+const lostItemSchema = new mongoose.Schema({
+  bookingId: { type: String, required: true }, // The Ticket Code
+  itemName: { type: String, required: true },
+  category: { type: String, required: true },
+  description: { type: String, required: true },
+  lostDate: { type: String, required: true },
+  lostLocation: { type: String, required: true },
+  busPlate: { type: String },
+  imageUrl: { type: String },
+  contactPhone: { type: String, required: true },
+  userEmail: { type: String, required: true }, // To link to the logged-in user
+  status: { type: String, enum: ['Reported', 'Under Review', 'Found', 'Returned', 'Rejected'], default: 'Reported' }
+}, { timestamps: true });
+
+module.exports = mongoose.model('LostItem', lostItemSchema);
+
+==========================================
+FILE: C:\Users\gediy\Desktop\all in one\class\final project\real work\hztms\backend\src\models\Message.js
+==========================================
+const mongoose = require('mongoose');
+const messageSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  email: { type: String, required: true },
+  message: { type: String, required: true }
+}, { timestamps: true });
+module.exports = mongoose.model('Message', messageSchema);
+
+==========================================
+FILE: C:\Users\gediy\Desktop\all in one\class\final project\real work\hztms\backend\src\models\Route.js
+==========================================
+const mongoose = require('mongoose');
+
+const routeSchema = new mongoose.Schema({
+  from: { type: String, required: true, default: 'Hossana' },
+  from_am: { type: String, default: 'ሆሳና' },
+  to: { type: String, required: true },
+  to_am: { type: String },
+  price: { type: Number, required: true },
+  duration: { type: String, required: true },
+  frequency: { type: String, required: true },
+  frequency_am: { type: String },
+  image: { type: String, default: '' }
+}, { timestamps: true });
+
+module.exports = mongoose.model('Route', routeSchema);
+
+==========================================
+FILE: C:\Users\gediy\Desktop\all in one\class\final project\real work\hztms\backend\src\models\Schedule.js
+==========================================
+const mongoose = require('mongoose');
+
+const scheduleSchema = new mongoose.Schema({
+  busId: { type: String, required: true, unique: true },
+  from: { type: String, required: true, default: 'Hossana' },
+  from_am: { type: String, default: 'ሆሳና' },
+  to: { type: String, required: true },
+  to_am: { type: String },
+  departure: { type: String, required: true },
+  arrival: { type: String, required: true },
+  price: { type: Number, required: true },
+  status: { type: String, enum: ['Boarding', 'Available', 'Full'], default: 'Available' }
+}, { timestamps: true });
+
+module.exports = mongoose.model('Schedule', scheduleSchema);
+
+==========================================
+FILE: C:\Users\gediy\Desktop\all in one\class\final project\real work\hztms\backend\src\models\User.js
+==========================================
+const mongoose = require('mongoose');
+
+const userSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  email: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+  role: { 
+    type: String, 
+    enum: ['Passenger', 'Driver', 'TicketOfficer', 'LostFoundOfficer', 'Admin'], 
+    default: 'Passenger' 
+  }
+}, { timestamps: true });
+
+module.exports = mongoose.model('User', userSchema);
+
+==========================================
+FILE: C:\Users\gediy\Desktop\all in one\class\final project\real work\hztms\backend\src\routes\announcementRoutes.js
+==========================================
+const express = require('express');
+const router = express.Router();
+const { getAnnouncements, createAnnouncement, deleteAnnouncement } = require('../controllers/announcementController');
+const { admin, protect } = require('../middleware/authMiddleware');
+router.route('/').get(getAnnouncements).post(protect, admin, createAnnouncement);
+router.route('/:id').delete(protect, admin, deleteAnnouncement);
+module.exports = router;
+
+==========================================
+FILE: C:\Users\gediy\Desktop\all in one\class\final project\real work\hztms\backend\src\routes\authRoutes.js
+==========================================
+const express = require('express');
+const router = express.Router();
+const { registerUser, loginUser } = require('../controllers/authController');
+
+router.post('/register', registerUser);
+router.post('/login', loginUser);
+
+module.exports = router;
+
+==========================================
+FILE: C:\Users\gediy\Desktop\all in one\class\final project\real work\hztms\backend\src\routes\bookingRoutes.js
+==========================================
+const express = require('express');
+const router = express.Router();
+const { createBooking, getBookings, updateBookingStatus } = require('../controllers/bookingController');
+const { admin, protect } = require('../middleware/authMiddleware');
+router.route('/').post(createBooking).get(protect, admin, getBookings);
+router.route('/:id').put(protect, admin, updateBookingStatus);
+module.exports = router;
+
+==========================================
+FILE: C:\Users\gediy\Desktop\all in one\class\final project\real work\hztms\backend\src\routes\chatRoutes.js
+==========================================
+
+==========================================
+FILE: C:\Users\gediy\Desktop\all in one\class\final project\real work\hztms\backend\src\routes\complaintRoutes.js
+==========================================
+const express = require('express');
+const router = express.Router();
+const { createComplaint, getComplaints, getMyComplaints, updateComplaint } = require('../controllers/complaintController');
+const { admin, protect } = require('../middleware/authMiddleware');
+
+router.route('/').post(protect, createComplaint).get(protect, admin, getComplaints);
+router.route('/my/:email').get(protect, getMyComplaints);
+router.route('/:id').put(protect, admin, updateComplaint);
+
+module.exports = router;
+
+==========================================
+FILE: C:\Users\gediy\Desktop\all in one\class\final project\real work\hztms\backend\src\routes\lostFoundRoutes.js
+==========================================
+const express = require('express');
+const router = express.Router();
+const { createLostItem, getLostItems, createFoundItem, getFoundItems, getAdminFoundItems, updateFoundItemStatus } = require('../controllers/lostFoundController');
+const { admin, protect } = require('../middleware/authMiddleware');
+
+router.route('/lost').post(protect, createLostItem).get(protect, admin, getLostItems);
+router.route('/found').post(createFoundItem).get(getFoundItems);
+router.route('/admin/found').get(protect, admin, getAdminFoundItems);
+router.route('/admin/found/:id').put(protect, admin, updateFoundItemStatus);
+router.route('/admin/lost/:id').put(protect, admin, (req, res) => {
+  const LostItem = require('../models/LostItem');
+  LostItem.findByIdAndUpdate(req.params.id, req.body, { new: true }).then(item => res.json(item)).catch(err => res.status(500).json({ message: err.message }));
+});
+
+module.exports = router;
+
+
+==========================================
+FILE: C:\Users\gediy\Desktop\all in one\class\final project\real work\hztms\backend\src\routes\lostItemRoutes.js
+==========================================
+
+==========================================
+FILE: C:\Users\gediy\Desktop\all in one\class\final project\real work\hztms\backend\src\routes\messageRoutes.js
+==========================================
+const express = require('express');
+const router = express.Router();
+const { getMessages, createMessage } = require('../controllers/messageController');
+const { admin, protect } = require('../middleware/authMiddleware');
+router.route('/').get(protect, admin, getMessages).post(createMessage);
+module.exports = router;
+
+==========================================
+FILE: C:\Users\gediy\Desktop\all in one\class\final project\real work\hztms\backend\src\routes\routeRoutes.js
+==========================================
+const express = require('express');
+const router = express.Router();
+const { getRoutes, createRoute, deleteRoute } = require('../controllers/routeController');
+const { admin, protect } = require('../middleware/authMiddleware');
+router.route('/').get(getRoutes).post(protect, admin, createRoute);
+router.route('/:id').delete(protect, admin, deleteRoute);
+module.exports = router;
+
+==========================================
+FILE: C:\Users\gediy\Desktop\all in one\class\final project\real work\hztms\backend\src\routes\scheduleRoutes.js
+==========================================
+const express = require('express');
+const router = express.Router();
+const { getSchedules, createSchedule, deleteSchedule, updateScheduleStatus } = require('../controllers/scheduleController');
+const { admin, protect } = require('../middleware/authMiddleware');
+router.route('/').get(getSchedules).post(protect, admin, createSchedule);
+router.route('/:id').delete(protect, admin, deleteSchedule).put(protect, admin, updateScheduleStatus);
+module.exports = router;
+
+==========================================
+FILE: C:\Users\gediy\Desktop\all in one\class\final project\real work\hztms\backend\src\routes\uploadRoutes.js
+==========================================
+const express = require('express');
+const upload = require('../middleware/upload');
+const { uploadImage } = require('../config/cloudinary');
+
+const router = express.Router();
+
+router.post('/', upload.single('image'), async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ message: 'Choose an image file' });
+    const image = await uploadImage(req.file);
+    res.status(201).json(image);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+module.exports = router;
+
+==========================================
+FILE: C:\Users\gediy\Desktop\all in one\class\final project\real work\hztms\backend\src\services\bookingService.js
+==========================================
+
+==========================================
+FILE: C:\Users\gediy\Desktop\all in one\class\final project\real work\hztms\backend\src\services\notificationService.js
+==========================================
+
+==========================================
+FILE: C:\Users\gediy\Desktop\all in one\class\final project\real work\hztms\backend\src\services\ticketService.js
+==========================================
+
+==========================================
+FILE: C:\Users\gediy\Desktop\all in one\class\final project\real work\hztms\backend\src\utils\generateCode.js
+==========================================
+const generateCode = () => {
+  return 'HZ-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+};
+
+module.exports = { generateCode };
+
+==========================================
+FILE: C:\Users\gediy\Desktop\all in one\class\final project\real work\hztms\backend\src\utils\logger.js
+==========================================
+
+==========================================
+FILE: C:\Users\gediy\Desktop\all in one\class\final project\real work\hztms\backend\src\utils\validators.js
+==========================================
+
+==========================================
+FILE: C:\Users\gediy\Desktop\all in one\class\final project\real work\hztms\backend\src\seed.js
+==========================================
+const mongoose = require('mongoose');
+const dotenv = require('dotenv');
+const Route = require('./models/Route');
+const Schedule = require('./models/Schedule');
+const Announcement = require('./models/Announcement');
+const connectDB = require('./config/db');
+
+dotenv.config();
+
+const routes = [
+  { from: 'Hossana', to: 'Addis Ababa', price: 450, duration: '4h 30m', frequency: 'Every 3 hours' },
+  { from: 'Hossana', to: 'Hawassa', price: 300, duration: '3h 15m', frequency: 'Every 5 hours' },
+  { from: 'Hossana', to: 'Wolkite', price: 250, duration: '2h 45m', frequency: 'Twice daily' },
+  { from: 'Hossana', to: 'Butajira', price: 200, duration: '2h 00m', frequency: 'Daily 08:00' },
+];
+
+const schedules = [
+  { busId: 'HZ-101', from: 'Hossana', to: 'Addis Ababa', departure: '06:00', arrival: '10:30', price: 450, status: 'Boarding' },
+  { busId: 'HZ-102', from: 'Hossana', to: 'Addis Ababa', departure: '09:00', arrival: '13:30', price: 450, status: 'Available' },
+  { busId: 'HZ-201', from: 'Hossana', to: 'Hawassa', departure: '07:30', arrival: '10:45', price: 300, status: 'Full' },
+  { busId: 'HZ-202', from: 'Hossana', to: 'Hawassa', departure: '13:00', arrival: '16:15', price: 300, status: 'Available' },
+  { busId: 'HZ-301', from: 'Hossana', to: 'Wolkite', departure: '08:00', arrival: '10:45', price: 250, status: 'Boarding' },
+];
+
+const announcements = [
+  { title: 'New express service to Addis', date: 'Nov 10, 2026', body: 'A new 06:00 express departure has been added on weekdays.' },
+  { title: 'Holiday schedule', date: 'Nov 05, 2026', body: 'Extra buses will run during the upcoming holiday period.' },
+  { title: 'Ticket office hours extended', date: 'Oct 28, 2026', body: 'The ticket office now opens at 05:30 daily.' },
+];
+
+const seedData = async () => {
+  try {
+    await connectDB();
+
+    // Clear existing data
+    await Route.deleteMany();
+    await Schedule.deleteMany();
+    await Announcement.deleteMany();
+
+    // Insert new data
+    await Route.insertMany(routes);
+    await Schedule.insertMany(schedules);
+    await Announcement.insertMany(announcements);
+
+    console.log('✅ Data imported successfully!');
+    process.exit();
+  } catch (error) {
+    console.error(`❌ Error: ${error.message}`);
+    process.exit(1);
+  }
+};
+
+seedData();
+
+==========================================
+FILE: C:\Users\gediy\Desktop\all in one\class\final project\real work\hztms\backend\src\server.js
+==========================================
+require('dotenv').config();
+const express = require('express');
+const cors = require('cors');
+const connectDB = require('./config/db');
+const app = express();
+
+const DEFAULT_ORIGINS = [
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+  'http://localhost:4173',
+  'https://hztms-frontend.vercel.app',
+  'https://hztms.vercel.app',
+];
+
+function allowedOrigins() {
+  const extra = (process.env.CLIENT_URL || '')
+    .split(',')
+    .map((value) => value.trim())
+    .filter(Boolean);
+  return [...new Set([...DEFAULT_ORIGINS, ...extra])];
+}
+
+app.use(cors({
+  origin(origin, callback) {
+    if (!origin) return callback(null, true);
+    if (allowedOrigins().includes(origin)) return callback(null, true);
+    if (/^https:\/\/hztms(-frontend)?[a-z0-9-]*\.vercel\.app$/i.test(origin)) return callback(null, true);
+    return callback(null, false);
+  },
+}));
+app.use(express.json({ limit: '2mb' }));
+app.get('/', (req, res) => { res.send('API running'); });
+app.get('/api/health', (req, res) => { res.json({ ok: true }); });
+app.use('/api/auth', require('./routes/authRoutes'));
+app.use('/api/routes', require('./routes/routeRoutes'));
+app.use('/api/schedules', require('./routes/scheduleRoutes'));
+app.use('/api/bookings', require('./routes/bookingRoutes'));
+app.use('/api/announcements', require('./routes/announcementRoutes'));
+app.use('/api/messages', require('./routes/messageRoutes'));
+app.use('/api/uploads', require('./routes/uploadRoutes'));
+app.use('/api/lost-found', require('./routes/lostFoundRoutes'));
+app.use('/api/complaints', require('./routes/complaintRoutes'));
+const { errorHandler } = require('./middleware/errorHandler');
+app.use(errorHandler);
+const PORT = process.env.PORT || 5000;
+connectDB().then(() => app.listen(PORT, () => console.log(`🚀 Server running on ${PORT}`)));
+
+
